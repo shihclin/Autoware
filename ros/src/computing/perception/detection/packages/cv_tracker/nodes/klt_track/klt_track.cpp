@@ -59,6 +59,14 @@
 #include <algorithm>
 #include <iterator>
 
+/*=====*/
+#include <chrono>
+
+
+static double track_time = 0;
+static double detect_time = 0;
+static std::chrono::time_point<std::chrono::system_clock> track_start, track_end;
+static std::chrono::time_point<std::chrono::system_clock> detect_start, detect_end;
 
 class RosTrackerApp
 {
@@ -185,6 +193,8 @@ class RosTrackerApp
 public:
 	void image_callback(const sensor_msgs::Image& image_source)
 	{
+		track_start = std::chrono::system_clock::now();
+
 		cv_bridge::CvImagePtr cv_image = cv_bridge::toCvCopy(image_source, sensor_msgs::image_encodings::BGR8);
 		cv::Mat image_track = cv_image->image;
 		cv::LatentSvmDetector::ObjectDetection empty_detection(cv::Rect(0,0,0,0),0,0);
@@ -286,7 +296,7 @@ public:
 		//std::cout << "TRACKERS: " << obj_trackers_.size() << std::endl;
 
 		obj_detections_.clear();
-        ranges_.clear();
+        	ranges_.clear();
 
 		cv_tracker::image_obj_tracked tmp_objects_msg;
 
@@ -310,11 +320,16 @@ public:
 		//ready_ = false;
 
 		publish_if_possible();
+		track_end = std::chrono::system_clock::now();
+		
 
+		track_time = std::chrono::duration_cast<std::chrono::microseconds>(track_end - track_start).count() / 1000.0;
+		std::cout << "Tracking Execution Time: " << track_time << " ms." << std::endl;
 	}
 
 	void detections_callback(cv_tracker::image_obj_ranged image_objects_msg)
 	{
+		detect_start = std::chrono::system_clock::now();
 		//if(ready_)
 		//	return;
 		if (!detect_ready_)//must NOT overwrite, data is probably being used by tracking.
@@ -324,7 +339,7 @@ public:
 			tracked_type_ = image_objects_msg.type;
 			//points are X,Y,W,H and repeat for each instance
 			obj_detections_.clear();
-            ranges_.clear();
+            		ranges_.clear();
             
 			for (unsigned int i=0; i<num;i++)
 			{
@@ -343,6 +358,11 @@ public:
 
 		publish_if_possible();
 		//ready_ = true;
+		detect_end = std::chrono::system_clock::now();
+		
+		
+		detect_time = std::chrono::duration_cast<std::chrono::microseconds>(detect_end - detect_start).count() / 1000.0;
+		std::cout << "Detecting Execution Time: " << detect_time << " ms." << std::endl;
 	}
 	/*void detections_callback(cv_tracker::image_obj image_objects_msg)
 	{
@@ -382,30 +402,35 @@ public:
 
 		if (private_node_handle.getParam("image_raw_node", image_raw_topic_str))
 			{
-				ROS_INFO("Setting image node to %s", image_raw_topic_str.c_str());
+				ROS_INFO("klt_track: Setting image node to %s", image_raw_topic_str.c_str());
 			}
 		else
 		{
-			ROS_INFO("No image node received, defaulting to /image_raw, you can use _image_raw_node:=YOUR_TOPIC");
+			ROS_INFO("klt_track: No image node received, defaulting to /image_raw, you can use _image_raw_node:=YOUR_TOPIC");
 			image_raw_topic_str = "/image_raw";
 		}
 		if (private_node_handle.getParam(ros::this_node::getNamespace() + "/img_obj_node", image_obj_topic_str))
 			{
-				ROS_INFO("Setting object node to %s", image_obj_topic_str.c_str());
+				ROS_INFO("klt_track: Setting object node to %s", image_obj_topic_str.c_str());
 			}
 		else
 		{
-			ROS_INFO("No object node received, defaulting to image_obj_ranged, you can use _img_obj_node:=YOUR_TOPIC");
-			image_obj_topic_str = "image_obj_ranged";
+			ROS_INFO("klt_track: No object node received, defaulting to image_obj_ranged, you can use _img_obj_node:=YOUR_TOPIC");
+			//ROS_INFO("klt_track: No object node received, defaulting to image_obj, you can use _img_obj_node:=YOUR_TOPIC");
+			image_obj_topic_str = "/image_obj_ranged";
+			//image_obj_topic_str = "/image_obj";
 		}
 
 
 		publisher_tracked_objects_ = node_handle_.advertise<cv_tracker::image_obj_tracked>("image_obj_tracked", 1);
 
-		ROS_INFO("Subscribing to... %s", image_raw_topic_str.c_str());
-		ROS_INFO("Subscribing to... %s", image_obj_topic_str.c_str());
+		ROS_INFO("klt_track Subscribing to... %s", image_raw_topic_str.c_str());
+		ROS_INFO("klt_track Subscribing to... %s", image_obj_topic_str.c_str());
+		//subscriber_image_raw_ = node_handle_.subscribe("/image_raw", 1, &RosTrackerApp::image_callback, this);
 		subscriber_image_raw_ = node_handle_.subscribe(image_raw_topic_str, 1, &RosTrackerApp::image_callback, this);
 		subscriber_image_obj_ = node_handle_.subscribe(image_obj_topic_str, 1, &RosTrackerApp::detections_callback, this);
+
+
 
 		std::string config_topic("/config");
 		config_topic += ros::this_node::getNamespace() + "/klt";

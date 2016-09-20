@@ -1,5 +1,5 @@
 <launch>
-  <arg name="file" default="" />
+  <arg name="file" default="/home/shihclin/.autoware/data/calibration/camera_lidar_3d/prius/nic-150407.yml" />
   <arg name="register_lidar2camera_tf" default="true"/>
   <arg name="publish_extrinsic_mat" default="true"/>
   <arg name="publish_camera_info" default="false"/>

@@ -595,6 +595,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
             << "," << angular_velocity << "," << exe_time << "," << align_time << "," << getFitnessScore_time << std::endl;
 
     std::cout << "-----------------------------------------------------------------" << std::endl;
+    std::cout << "ICP Localizer" << std::endl;
     std::cout << "Sequence: " << input->header.seq << std::endl;
     std::cout << "Timestamp: " << input->header.stamp << std::endl;
     std::cout << "Frame ID: " << input->header.frame_id << std::endl;

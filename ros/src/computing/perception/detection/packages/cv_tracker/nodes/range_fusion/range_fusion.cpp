@@ -109,20 +109,20 @@ int main(int argc, char **argv)
 	std::string points_topic;
 	if (private_nh.getParam("image_node", image_topic))
 	{
-		ROS_INFO("Setting image node to %s", image_topic.c_str());
+		ROS_INFO("Range Fusion: Setting image node to %s", image_topic.c_str());
 	}
 	else
 	{
-		ROS_INFO("No image node received, defaulting to image_obj, you can use _image_node:=YOUR_TOPIC");
-		image_topic = "image_obj";
+		ROS_INFO("Range Fusion: No image node received, defaulting to image_obj_ranged, you can use _image_node:=YOUR_TOPIC");
+		image_topic = "image_obj_ranged";
 	}
 	if (private_nh.getParam("points_node", points_topic))
 	{
-		ROS_INFO("Setting points node to %s", points_topic.c_str());
+		ROS_INFO("Range Fusion: Setting points node to %s", points_topic.c_str());
 	}
 	else
 	{
-		ROS_INFO("No points node received, defaulting to vscan_image, you can use _points_node:=YOUR_TOPIC");
+		ROS_INFO("Range Fusion: No points node received, defaulting to vscan_image, you can use _points_node:=YOUR_TOPIC");
 		points_topic = "/vscan_image";
 	}
 
@@ -133,7 +133,9 @@ int main(int argc, char **argv)
 #if _DEBUG
 	ros::Subscriber image_sub = n.subscribe(IMAGE_TOPIC, 1, IMAGE_CALLBACK);
 #endif
-	fused_objects = n.advertise<cv_tracker::image_obj_ranged>("image_obj_ranged", 1);
+	fused_objects = n.advertise<cv_tracker::image_obj_ranged>("/image_obj_ranged", 1);
+	//fused_objects = n.advertise<cv_tracker::image_obj_ranged>("image_obj_ranged", 1);
+	//fused_objects = n.advertise<cv_tracker::image_obj_ranged>("image_obj", 1);
 
 	ros::Subscriber config_subscriber;
 	std::string config_topic("/config");

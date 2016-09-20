@@ -1,7 +1,7 @@
 <launch>
   <arg name="car" default="true"/>
   <arg name="pedestrian" default="false"/>
-  <arg name="camera_id" default="/"/>
+  <arg name="camera_id" default=""/>
   <arg name="sync" default="false" />
 
   <group if="$(arg car)">

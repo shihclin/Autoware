@@ -38,12 +38,17 @@
 #include "waypoint_follower/libwaypoint_follower.h"
 #include "waypoint_follower/LaneArray.h"
 
+
+#include <chrono>
+
 struct WP
 {
   geometry_msgs::Pose pose;
   double velocity_kmh;
 };
 
+static double exe_time = 0.0;
+static std::chrono::time_point<std::chrono::system_clock> InitWP_start, InitWP_end;
 
 static const std::string DRIVING_LANE_CSV = "/tmp/driving_lane.csv";
 static const std::string PASSING_LANE_CSV = "/tmp/passing_lane.csv";
@@ -228,8 +233,12 @@ int main(int argc, char **argv)
   }
   else
   {
+    InitWP_start = std::chrono::system_clock::now();
     ROS_INFO("driving lane data is valid. publishing...");
     lane_array.lanes.push_back(createLaneWaypoint(readWaypoint(driving_lane_csv.c_str())));
+    InitWP_end = std::chrono::system_clock::now();
+     exe_time = std::chrono::duration_cast<std::chrono::microseconds>(InitWP_end - InitWP_start).count() / 1000.0;
+    std::cout << "Initial WayPoint Execution Time: " << exe_time << " ms." << std::endl;
   }
 
   if (!verifyFileConsistency(passing_lane_csv.c_str()))

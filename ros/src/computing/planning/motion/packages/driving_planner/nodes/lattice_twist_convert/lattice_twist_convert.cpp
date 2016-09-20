@@ -143,7 +143,7 @@ int main(int argc, char **argv)
     ros::spinOnce();
     current_time = ros::Time::now().toSec();
     double elapsedTime = current_time - start_time;
-
+    std::cout << "Twist Convert in Mission Execution Time: " << (elapsedTime/1000.0) << " ms." << std::endl;
     // Make sure we haven't finished the mission yet
     if(endflag==FALSE)
     {

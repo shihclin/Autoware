@@ -5,8 +5,17 @@ MY_PATH=$(readlink -f  $(dirname $0))
 # what type of terminal
 OPTION_TITLE='--title'
 OPTION_WORKING_DIR='working-directory'
-OPTION_CORE_GEOMETRY='--geometry=50x10+0+0'
-OPTION_RM_GEOMETRY='--geometry=50x10+500+0'
+
+OPTION_RM_GEOMETRY='--geometry=50x20+0+0'
+OPTION_CORE_GEOMETRY='--geometry=50x20+535+0'
+OPTION_MAP_GEOMETRY='--geometry=50x20+1000+0'
+OPTION_LOC_GEOMETRY='--geometry=50x20+1500+0'
+
+OPTION_SEN_GEOMETRY='--geometry=50x20+0+500'
+OPTION_DET_GEOMETRY='--geometry=100x20+0+500'
+OPTION_MIPL_GEOMETRY='--geometry=50x20+1000+500'
+OPTION_MOPL_GEOMETRY='--geometry=50x20+1500+500'
+
 OPTION_COMMAND='--command'
 
 if [ $(which gnome-terminal) ]; then
@@ -27,18 +36,46 @@ elif [ $(which konsole) ]; then
     OPTION_TITLE='-T'
 fi
 
-echo "Process Manager"
+#echo "Process Manager"
 
-gksudo --message "Please input password for launching process manager" \
-       -- $MY_PATH/run_proc_manager &
+#gksudo --message "Please input password for launching process manager" \
+#       -- $MY_PATH/run_proc_manager &
 
-ADDR=$($MY_PATH/src/.config/rviz/subnet_chk.py -)
-if [ "$?" == "0" ]; then
-  export ROS_IP=$ADDR
-fi
+#ADDR=$($MY_PATH/src/.config/rviz/subnet_chk.py -)
+#if [ "$?" == "0" ]; then
+#  export ROS_IP=$ADDR
+#fi
 
 # boot ros-master
 ${TERMINAL} ${OPTION_CORE_GEOMETRY} ${OPTION_TITLE}="roscore" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roscore'"&
 
-# boot runtime_manager
-${TERMINAL} ${OPTION_RM_GEOMETRY} ${OPTION_TITLE}="runtime_manager" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; rosrun runtime_manager runtime_manager_dialog.py'"
+# boot runtime_manager  (GUI)
+#${TERMINAL} ${OPTION_RM_GEOMETRY} ${OPTION_TITLE}="runtime_manager" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; rosrun runtime_manager runtime_manager_dialog.py'"
+
+#play bag
+${TERMINAL} ${OPTION_RM_GEOMETRY} ${OPTION_TITLE}="bag" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; rosbag play --pause ~/.autoware/new_spec.bag'"&
+
+#wait for master
+sleep 3
+
+#setup rosparam 
+source ParamSetup.sh
+
+#boot map launch
+${TERMINAL} ${OPTION_MAP_GEOMETRY} ${OPTION_TITLE}="map" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_map.launch'" &
+
+#boot localization launch
+${TERMINAL} ${OPTION_LOC_GEOMETRY} ${OPTION_TITLE}="loc" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_localization.launch'" &
+
+#boot sensing launch
+#${TERMINAL} ${OPTION_SEN_GEOMETRY} ${OPTION_TITLE}="sen" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_sensing.launch'"&
+
+#boot detection launch
+${TERMINAL} ${OPTION_DET_GEOMETRY} ${OPTION_TITLE}="det" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_detection.launch'"&
+
+#boot mission planning launch
+${TERMINAL} ${OPTION_MIPL_GEOMETRY} ${OPTION_TITLE}="mipl" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_mission_planning.launch'"&
+
+#boot motion planning launch
+${TERMINAL} ${OPTION_MOPL_GEOMETRY} ${OPTION_TITLE}="mopl" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_motion_planning.launch'"&
+

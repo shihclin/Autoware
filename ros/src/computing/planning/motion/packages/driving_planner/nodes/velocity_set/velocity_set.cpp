@@ -50,9 +50,14 @@
 #include "waypoint_follower/libwaypoint_follower.h"
 #include "libvelocity_set.h"
 
+#include <chrono>
+/*=====*/
+static std::chrono::time_point<std::chrono::system_clock> timestamp_start, timestamp_1, timestamp_2, timestamp_3, timestamp_end;
+
+static double exe_time_0, exe_time_1, exe_time_2, exe_time_3;
+
 namespace
 {
-
 const int LOOP_RATE = 10;
 
 geometry_msgs::TwistStamped g_current_twist;
@@ -891,13 +896,41 @@ int main(int argc, char **argv)
     closest_waypoint.data = g_closest_waypoint;
     closest_waypoint_pub.publish(closest_waypoint);
 
+    /*=====*/
+    timestamp_start = std::chrono::system_clock::now();
+    //
     vmap.setDetectionWaypoint(findCrossWalk());
-
+    
+    /*=====*/
+    timestamp_1 = std::chrono::system_clock::now();
+    //
     EControl detection_result = obstacleDetection();
 
+
+    /*=====*/
+    timestamp_2 = std::chrono::system_clock::now();
+    //
     changeWaypoint(detection_result);
 
+    /*=====*/
+    timestamp_3 = std::chrono::system_clock::now();
+    //
     g_vscan.clear();
+
+    /*=====*/
+    timestamp_end = std::chrono::system_clock::now();
+    //
+
+   exe_time_0 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_1 - timestamp_start).count() / 1000.0;
+   exe_time_1 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_2 - timestamp_1).count() / 1000.0;
+   exe_time_2 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_3 - timestamp_2).count() / 1000.0;
+   exe_time_3 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_end - timestamp_3).count() / 1000.0;
+
+    std::cout << "FindCrossWoalk Execution Time: " << exe_time_0 << " ms." << std::endl;
+    std::cout << "Obstacle Detection Execution Time: " << exe_time_1 << " ms." << std::endl;
+    std::cout << "Change WP Execution Time: " << exe_time_2 << " ms." << std::endl;
+    std::cout << "Reset Execution Time: " << exe_time_3 << " ms." << std::endl;
+    std::cout << "Total Execution Time: " << exe_time_0+exe_time_1+exe_time_2+exe_time_3 << " ms." << std::endl;
 
     loop_rate.sleep();
   }

@@ -44,6 +44,10 @@
 #include "waypoint_follower/libwaypoint_follower.h"
 #include "vehicle_socket/CanInfo.h"
 
+
+/*=============*/
+#include <chrono>
+
 namespace
 {
 //#define LOG
@@ -80,6 +84,12 @@ ros::Publisher _target_pub;
 ros::Publisher _search_pub;
 ros::Publisher g_cmd_velocity_publisher;
 ros::Publisher _line_point_pub;
+
+
+/*===============*/
+static double exe_time = 0.0;
+static std::chrono::time_point<std::chrono::system_clock> PurePursuit_start, PurePursuit_end;
+/*===============*/
 
 void ConfigCallback(const runtime_manager::ConfigWaypointFollowerConstPtr &config)
 {
@@ -653,6 +663,11 @@ void doPurePursuit()
   displayNextWaypoint(next_waypoint);
   displaySearchRadius(getLookAheadThreshold(0));
 
+  /*=====*/
+  PurePursuit_start = std::chrono::system_clock::now();
+  /*=====*/
+
+
   geometry_msgs::Point next_target;
   // if g_linear_interpolate_mode is false or next waypoint is first or last
   if (!g_linear_interpolate_mode || next_waypoint == 0 ||
@@ -673,11 +688,18 @@ void doPurePursuit()
     return;
   }
 
-  // ROS_INFO("next_target : ( %lf , %lf , %lf)", next_target.x, next_target.y,next_target.z);
-  displayNextTarget(next_target);
-  displayTrajectoryCircle(generateTrajectoryCircle(next_target));
+  /*comment out*/
+  //-ROS_INFO("next_target : ( %lf , %lf , %lf)", next_target.x, next_target.y,next_target.z);
+  //-displayNextTarget(next_target);
+  //-displayTrajectoryCircle(generateTrajectoryCircle(next_target));
+  /*comment out*/
 
   publishSuccess(calcTwist(calcCurvature(next_target), getCmdVelocity(0)));
+  /*=====*/
+  PurePursuit_end = std::chrono::system_clock::now();
+  exe_time	  = std::chrono::duration_cast<std::chrono::microseconds>(PurePursuit_end - PurePursuit_start).count() / 1000.0;
+  std::cout << "Pure Pursuit Execution Time: " << exe_time << " ms." << std::endl;
+  /*=====*/ 
 
 // ROS_INFO("linear : %lf, angular : %lf",twist.twist.linear.x,twist.twist.angular.z);
 

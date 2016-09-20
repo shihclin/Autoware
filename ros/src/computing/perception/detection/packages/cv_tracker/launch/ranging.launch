@@ -1,7 +1,7 @@
 <launch>
   <arg name="car" default="true"/>
   <arg name="pedestrian" default="false"/>
-  <arg name="image_node" default="image_obj"/>
+  <arg name="image_node" default="/image_obj"/>
   <arg name="points_node" default="/points_image"/>
   <arg name="sync" default="false" />
 

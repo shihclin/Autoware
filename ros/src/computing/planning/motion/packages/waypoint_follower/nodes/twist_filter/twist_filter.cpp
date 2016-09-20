@@ -35,9 +35,19 @@
 
 #include "runtime_manager/ConfigTwistFilter.h"
 
+/*=============*/
+#include <chrono>
+
 //Publisher
 static ros::Publisher g_twist_pub;
 static double g_lateral_accel_limit = 0.8;
+
+/*===============*/
+static double exe_time = 0.0;
+static std::chrono::time_point<std::chrono::system_clock> twist_start, twist_end;
+/*===============*/
+
+
 
 static void configCallback(const runtime_manager::ConfigTwistFilterConstPtr &config)
 {
@@ -47,6 +57,10 @@ static void configCallback(const runtime_manager::ConfigTwistFilterConstPtr &con
 
 void TwistCmdCallback(const geometry_msgs::TwistStampedConstPtr &msg)
 {
+  /*=====*/
+  twist_start = std::chrono::system_clock::now();
+  /*=====*/
+
   geometry_msgs::TwistStamped twist;
   twist.twist.linear.x = msg->twist.linear.x;
 
@@ -69,7 +83,13 @@ void TwistCmdCallback(const geometry_msgs::TwistStampedConstPtr &msg)
     twist.twist.angular.z = msg->twist.angular.z;
   }
 
-  ROS_INFO("twist.linear.x = %lf, twist.angular.z = %lf",twist.twist.linear.x,twist.twist.angular.z);
+  /*=====*/
+  twist_end = std::chrono::system_clock::now();
+  exe_time        = std::chrono::duration_cast<std::chrono::microseconds>(twist_end - twist_start).count() / 1000.0;
+  std::cout << "Twist Filter Execution Time: " << exe_time << " ms." << std::endl;
+  /*=====*/
+
+  //ROS_INFO("twist.linear.x = %lf, twist.angular.z = %lf",twist.twist.linear.x,twist.twist.angular.z);
   g_twist_pub.publish(twist);
 
 }

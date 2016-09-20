@@ -3,7 +3,7 @@
   <arg name="pedestrian" default="false"/>
   <arg name="sync" default="false" />
 
-  <arg name="camera_id" default="/"/>
+  <arg name="camera_id" default=""/>
 
   <group if="$(arg car)">
     <group ns="obj_car">
