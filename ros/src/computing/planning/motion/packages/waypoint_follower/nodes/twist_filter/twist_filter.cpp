@@ -65,13 +65,13 @@ void TwistCmdCallback(const geometry_msgs::TwistStampedConstPtr &msg)
   twist.twist.linear.x = msg->twist.linear.x;
 
   double accel = msg->twist.linear.x * msg->twist.angular.z;
-  ROS_INFO("lateral accel = %lf",accel);
+  //ROS_INFO("lateral accel = %lf",accel);
 
 
 
   if(fabs(accel) > g_lateral_accel_limit)
   {
-    ROS_INFO("limit over! filtering...");
+    //ROS_INFO("limit over! filtering...");
     if(accel < 0)
       twist.twist.angular.z = (-1) * g_lateral_accel_limit / msg->twist.linear.x;
     else
@@ -85,8 +85,8 @@ void TwistCmdCallback(const geometry_msgs::TwistStampedConstPtr &msg)
 
   /*=====*/
   twist_end = std::chrono::system_clock::now();
-  exe_time        = std::chrono::duration_cast<std::chrono::microseconds>(twist_end - twist_start).count() / 1000.0;
-  std::cout << "Twist Filter Execution Time: " << exe_time << " ms." << std::endl;
+  exe_time  = std::chrono::duration_cast<std::chrono::microseconds>(twist_end - twist_start).count();
+  std::cout << "Twist filtering time: " << exe_time << " us." << std::endl;
   /*=====*/
 
   //ROS_INFO("twist.linear.x = %lf, twist.angular.z = %lf",twist.twist.linear.x,twist.twist.angular.z);

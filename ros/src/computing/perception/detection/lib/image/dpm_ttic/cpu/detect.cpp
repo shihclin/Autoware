@@ -47,8 +47,8 @@ static FLOAT *detect(IplImage *IM,MODEL *MO,FLOAT thresh,int *D_NUMS,FLOAT *A_SC
 	FLOAT **feature = dpm_ttic_cpu_calc_f_pyramid(IM,MO->MI,featsize,scales);
 	gettimeofday(&tv_calc_f_pyramid_end, NULL);
 	tvsub(&tv_calc_f_pyramid_end, &tv_calc_f_pyramid_start, &tv);
-	printf("\n");
-	printf("calc_f_pyramid %f[ms]\n", tv.tv_sec * 1000.0 + (float)tv.tv_usec / 1000.0);
+	//printf("\n");
+	//printf("calc_f_pyramid %f[ms]\n", tv.tv_sec * 1000.0 + (float)tv.tv_usec / 1000.0);
 
 	//detect boundary boxes
 	FLOAT *boxes = dpm_ttic_cpu_get_boxes(feature,scales,featsize,MO,D_NUMS,A_SCORE,thresh);

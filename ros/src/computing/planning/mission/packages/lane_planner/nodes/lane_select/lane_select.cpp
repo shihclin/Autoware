@@ -34,6 +34,16 @@
 #include "waypoint_follower/LaneArray.h"
 #include "runtime_manager/ConfigLaneSelect.h"
 
+/*=============*/
+#include <chrono>
+
+/*===============*/
+static double lane_select_time = 0.0;
+static std::chrono::time_point<std::chrono::system_clock> lane_select_start, lane_select_end;
+/*===============*/
+
+
+
 static ros::Publisher g_pub;
 static int g_lane_number = 0;
 static waypoint_follower::LaneArray g_lane_array;
@@ -49,12 +59,25 @@ static void laneArrayCallback(const waypoint_follower::LaneArrayConstPtr &msg)
 {
   g_lane_array = *msg;
   if ((int)g_lane_array.lanes.size() > g_lane_number)
+  {
+    /*=====*/
+    lane_select_start = std::chrono::system_clock::now();
     g_pub.publish(g_lane_array.lanes[g_lane_number]);
+    /*=====*/
+    lane_select_end = std::chrono::system_clock::now();
+    lane_select_time = std::chrono::duration_cast<std::chrono::microseconds>(lane_select_end - lane_select_start).count();
+    std::cout << "Lane select time: " << lane_select_time << " us." << std::endl;
+  }
+  else{
+  	std::cout<<"size < lane_number"<<std::endl;
+  }
 }
 
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "lane_select");
+  ROS_INFO("Enter Lane select");
+
 
   ros::NodeHandle nh;
   ros::Subscriber config_sub = nh.subscribe("/config/lane_select", 1, configCallback);

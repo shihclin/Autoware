@@ -841,8 +841,11 @@ void changeWaypoint(EControl detection_result)
 
 int main(int argc, char **argv)
 {
-  int i = 0;  ///
+  //int i = 0;  
   ros::init(argc, argv, "velocity_set");
+
+  std::cout<<"Enter Velocity Select"<<std::endl;
+
 
   ros::NodeHandle nh;
   ros::NodeHandle private_nh("~");
@@ -876,8 +879,10 @@ int main(int argc, char **argv)
     if (vmap.loaded_all && !vmap.set_points)
       vmap.setCrossWalkPoints();
 
+    //while(ros::ok()){
     if (g_pose_flag == false || g_path_flag == false)
-    {
+    //while (g_pose_flag == false || g_path_flag == false)
+    { /* 
       std::cout << "\rtopic waiting          \rtopic waiting";
       for (int j = 0; j < i; j++)
       {
@@ -886,10 +891,11 @@ int main(int argc, char **argv)
       i++;
       i = i % 10;
       std::cout << std::flush;
+	*/
       loop_rate.sleep();
-      continue;
+     continue;
     }
-
+    //}
     g_closest_waypoint = getClosestWaypoint(g_path_change.getCurrentWaypoints(), g_control_pose.pose);
 
     std_msgs::Int32 closest_waypoint;
@@ -921,19 +927,21 @@ int main(int argc, char **argv)
     timestamp_end = std::chrono::system_clock::now();
     //
 
-   exe_time_0 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_1 - timestamp_start).count() / 1000.0;
-   exe_time_1 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_2 - timestamp_1).count() / 1000.0;
-   exe_time_2 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_3 - timestamp_2).count() / 1000.0;
-   exe_time_3 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_end - timestamp_3).count() / 1000.0;
+   exe_time_0 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_1 - timestamp_start).count();
+   exe_time_1 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_2 - timestamp_1).count();
+   exe_time_2 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_3 - timestamp_2).count();
+   exe_time_3 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_end - timestamp_3).count();
 
-    std::cout << "FindCrossWoalk Execution Time: " << exe_time_0 << " ms." << std::endl;
-    std::cout << "Obstacle Detection Execution Time: " << exe_time_1 << " ms." << std::endl;
-    std::cout << "Change WP Execution Time: " << exe_time_2 << " ms." << std::endl;
-    std::cout << "Reset Execution Time: " << exe_time_3 << " ms." << std::endl;
-    std::cout << "Total Execution Time: " << exe_time_0+exe_time_1+exe_time_2+exe_time_3 << " ms." << std::endl;
+    std::cout << "FindCrossWoalk Execution Time: " << exe_time_0 << " us." << std::endl;
+    std::cout << "Obstacle Detection Execution Time: " << exe_time_1 << " us." << std::endl;
+    std::cout << "Change WP Execution Time: " << exe_time_2 << " us." << std::endl;
+    std::cout << "Reset Execution Time: " << exe_time_3 << " us." << std::endl;
+    std::cout << "Total Execution Time: " << exe_time_0+exe_time_1+exe_time_2+exe_time_3 << " us." << std::endl;
 
     loop_rate.sleep();
   }
+
+  //ros::spin();
 
   return 0;
 }

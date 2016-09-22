@@ -58,6 +58,8 @@
 #include <algorithm>
 #include <iterator>
 
+
+
 #define SSTR( x ) dynamic_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
@@ -78,6 +80,7 @@ static bool 		USE_ORB;
 static bool 		track_ready_;
 static bool 		detect_ready_;
 static cv_tracker::image_obj_tracked kf_objects_msg_;
+
 
 struct kstate
 {
@@ -777,6 +780,9 @@ void doTracking(std::vector<cv::LatentSvmDetector::ObjectDetection>& detections,
 	//return to x,y,w,h
 	posScaleToBbox(kstates, trackedDetections);
 
+	/*=====*/
+	track_ready_ = true;
+
 }
 
 void publish_if_possible()
@@ -800,7 +806,7 @@ void trackAndDrawObjects(cv::Mat& image, int frameNumber, std::vector<cv::Latent
 	//std::cout << endl << "START tracking...";
 	doTracking(detections, frameNumber, kstates, active, image, tracked_detections, colors);
 	tm.stop();
-	//std::cout << "END Tracking time = " << tm.getTimeSec() << " sec" << endl;
+	std::cout << "Tracking time = " << tm.getTimeMilli() << " ms." << std::endl;
 
 	//ROS
 	int num = tracked_detections.size();
@@ -858,7 +864,7 @@ void image_callback(const sensor_msgs::Image& image_source)
 	cv_bridge::CvImagePtr cv_image = cv_bridge::toCvCopy(image_source, sensor_msgs::image_encodings::BGR8);
 	cv::Mat imageTrack = cv_image->image;
 	trackAndDrawObjects(imageTrack, _counter, _dpm_detections, _kstates, _active, _colors, image_source);
-	//_ready=false;
+	_ready=false;
 	//imshow("Tracked", imageTrack);
 
 	_counter++;
@@ -866,8 +872,11 @@ void image_callback(const sensor_msgs::Image& image_source)
 
 void detections_callback(cv_tracker::image_obj_ranged image_objects_msg)
 {
+	//std::cout<<"Ready for detecting: " << detect_ready_ << std::endl;
 	if(!detect_ready_)
 	{
+		cv::TickMeter tm_de;
+        	tm_de.start();
 		unsigned int num = image_objects_msg.obj.size();
 		std::vector<cv_tracker::image_rect_ranged> objects = image_objects_msg.obj;
 		object_type = image_objects_msg.type;
@@ -890,8 +899,10 @@ void detections_callback(cv_tracker::image_obj_ranged image_objects_msg)
 			_min_heights.push_back(objects.at(i).min_height);
 			_max_heights.push_back(objects.at(i).max_height);
 		}
-		//_ready = true;
+		_ready = true;
 		detect_ready_ = true;
+		tm_de.stop();
+		std::cout << "Detecting time = " << tm_de.getTimeMilli() << " ms." << std::endl;
 	}
 	//cout << "received pos" << endl;
 
@@ -946,24 +957,26 @@ int kf_main(int argc, char* argv[])
 
 	cv::generateColors(_colors, 25);
 
+	ROS_INFO("Enter kf_track");
+
 	std::string image_topic;
 	std::string obj_topic;
 	if (private_nh.getParam("image_node", image_topic))
     	{
-        	ROS_INFO("Setting image node to %s", image_topic.c_str());
+        	ROS_INFO("kf_track: Setting image node to %s", image_topic.c_str());
     	}
 	else
 	{
-		ROS_INFO("No image node received, defaulting to image_raw, you can use _image_node:=YOUR_TOPIC");
+		ROS_INFO("kf_track: No image node received, defaulting to image_raw, you can use _image_node:=YOUR_TOPIC");
 		image_topic = "/image_raw";
 	}
 	if (private_nh.getParam("object_node", image_topic))
     	{
-        	ROS_INFO("Setting object node to %s", image_topic.c_str());
+        	ROS_INFO("kf_track: Setting object node to %s", image_topic.c_str());
     	}
 	else
 	{
-		ROS_INFO("No object node received, defaulting to image_obj_ranged, you can use _object_node:=YOUR_TOPIC");
+		ROS_INFO("kf_track: No object node received, defaulting to image_obj_ranged, you can use _object_node:=YOUR_TOPIC");
 		obj_topic = "image_obj_ranged";
 	}
 

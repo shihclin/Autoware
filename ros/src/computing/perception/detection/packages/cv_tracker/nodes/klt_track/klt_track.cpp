@@ -417,8 +417,7 @@ public:
 		{
 			ROS_INFO("klt_track: No object node received, defaulting to image_obj_ranged, you can use _img_obj_node:=YOUR_TOPIC");
 			//ROS_INFO("klt_track: No object node received, defaulting to image_obj, you can use _img_obj_node:=YOUR_TOPIC");
-			image_obj_topic_str = "/image_obj_ranged";
-			//image_obj_topic_str = "/image_obj";
+			image_obj_topic_str = "image_obj_ranged";
 		}
 
 

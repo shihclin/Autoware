@@ -46,6 +46,12 @@
 
 #include <lane_planner/vmap.hpp>
 
+#include <chrono>
+
+static double lane_rule_time = 0.0;
+static std::chrono::time_point<std::chrono::system_clock> lane_rule_start, lane_rule_end;
+
+
 namespace {
 
 double config_acceleration = 1; // m/s^2
@@ -273,6 +279,9 @@ std_msgs::ColorRGBA create_color(int index)
 
 void create_waypoint(const waypoint_follower::LaneArray& msg)
 {
+
+	std::cout<<"create_waypoint in lane rule"<<std::endl;
+
 	std_msgs::Header header;
 	header.stamp = ros::Time::now();
 	header.frame_id = frame_id;
@@ -294,6 +303,8 @@ void create_waypoint(const waypoint_follower::LaneArray& msg)
 	waypoint_follower::LaneArray traffic_waypoint;
 	waypoint_follower::LaneArray red_waypoint;
 	waypoint_follower::LaneArray green_waypoint;
+
+
 	for (size_t i = 0; i < msg.lanes.size(); ++i) {
 		waypoint_follower::lane lane = create_new_lane(msg.lanes[i], header);
 
@@ -345,13 +356,20 @@ void create_waypoint(const waypoint_follower::LaneArray& msg)
 	traffic_pub.publish(traffic_waypoint);
 	red_pub.publish(red_waypoint);
 	green_pub.publish(green_waypoint);
+
+
 }
 
 void update_values()
 {
+	std::cout << "Update value in lane rule" << std::endl;
+	
 	if (all_vmap.points.empty() || all_vmap.lanes.empty() || all_vmap.nodes.empty() ||
 	    all_vmap.stoplines.empty() || all_vmap.dtlanes.empty())
 		return;
+
+        /*====*/
+        lane_rule_start = std::chrono::system_clock::now();
 
 	lane_vmap = lane_planner::vmap::create_lane_vmap(all_vmap, lane_planner::vmap::LNO_ALL);
 
@@ -391,6 +409,13 @@ void update_values()
 		waypoint_follower::LaneArray update_waypoint = cached_waypoint;
 		create_waypoint(update_waypoint);
 	}
+
+
+        /*====*/
+        lane_rule_end = std::chrono::system_clock::now();
+	lane_rule_time = std::chrono::duration_cast<std::chrono::milliseconds>(lane_rule_end - lane_rule_start).count();
+        std::cout << "Lane rule time: " << lane_rule_time << " ms." << std::endl;
+
 }
 
 void cache_point(const map_file::PointClassArray& msg)
@@ -440,6 +465,7 @@ void config_parameter(const runtime_manager::ConfigLaneRule& msg)
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "lane_rule");
+	ROS_INFO("Enter Lane rule");
 
 	ros::NodeHandle n;
 

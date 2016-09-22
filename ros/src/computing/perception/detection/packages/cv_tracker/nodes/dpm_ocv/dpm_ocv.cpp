@@ -11,12 +11,18 @@
 
 #include <dpm_ocv.hpp>
 
+
+
 #define XSTR(x) #x
 #define STR(x) XSTR(x)
 
 #if defined(HAS_GPU)
 static bool use_gpu = true;
 #endif
+
+
+//static double dpm_time = 0.0;
+//static chrono::time_point<std::chrono::system_clock> dpm_start, dpm_end;
 
 static constexpr float SCORE_THRESHOLD = -0.5;
 static constexpr int NUM_CELLS = 8;
@@ -131,6 +137,7 @@ objectDetect::~objectDetect()
 
 void objectDetect::run()
 {
+	//std::cout<<"Test in dpm_ocv"<<std::endl;
 	std::string config_topic("/config");
 	config_topic += ros::this_node::getNamespace() + "/dpm";
 	config_sub_ = nh_.subscribe<runtime_manager::ConfigCarDpm>(config_topic, 1, &objectDetect::configCallback, this);
@@ -141,6 +148,10 @@ void objectDetect::run()
 // Callback
 void objectDetect::imageCallback(const sensor_msgs::ImageConstPtr& img)
 {
+	//dpm_start = std::chrono::system_clock::now();
+	cv::TickMeter tm;
+	tm.start();	
+
 	// transform image
 	cv_bridge::CvImagePtr cv_image = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::BGR8);
 	cv::Mat image = cv_image->image;
@@ -182,7 +193,15 @@ void objectDetect::imageCallback(const sensor_msgs::ImageConstPtr& img)
 		msg.obj.push_back(rect);
 	}
 
+	tm.stop();
 	detect_pub_.publish(msg);
+
+	//dpm_end = std::chrono::system_clock::now();
+	//dpm_time = std::chrono::duration_cast<std::chrono::milliseconds>(dpm_end - dpm_start).count();
+	std::cout << "--" <<std::endl;
+	std::cout << "dpm_ocv time: " << tm.getTimeMilli() << " ms." << std::endl;
+
+
 }
 
 void objectDetect::configCallback(const runtime_manager::ConfigCarDpm::ConstPtr& param)
@@ -197,6 +216,7 @@ void objectDetect::configCallback(const runtime_manager::ConfigCarDpm::ConstPtr&
 int main(int argc, char* argv[])
 {
 	ros::init(argc, argv, "dpm_ocv");
+	ROS_INFO("Enter dpm_ocv");
 
 	objectDetect detector;
 

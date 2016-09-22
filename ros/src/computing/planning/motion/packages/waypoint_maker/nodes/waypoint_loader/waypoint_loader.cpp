@@ -221,7 +221,7 @@ int main(int argc, char **argv)
   private_nh.param<std::string>("driving_lane_csv", driving_lane_csv, DRIVING_LANE_CSV);
   private_nh.param<std::string>("passing_lane_csv", passing_lane_csv, PASSING_LANE_CSV);
   private_nh.getParam("decelerate", _decelerate);
-  ROS_INFO_STREAM("decelerate :" << _decelerate);
+  //ROS_INFO_STREAM("decelerate :" << _decelerate);
 
   ros::Publisher lane_pub = nh.advertise<waypoint_follower::LaneArray>("lane_waypoints_array", 10, true);
   waypoint_follower::LaneArray lane_array;
@@ -238,7 +238,7 @@ int main(int argc, char **argv)
     lane_array.lanes.push_back(createLaneWaypoint(readWaypoint(driving_lane_csv.c_str())));
     InitWP_end = std::chrono::system_clock::now();
      exe_time = std::chrono::duration_cast<std::chrono::microseconds>(InitWP_end - InitWP_start).count() / 1000.0;
-    std::cout << "Initial WayPoint Execution Time: " << exe_time << " ms." << std::endl;
+    std::cout << "Initial WayPoint execution time: " << exe_time << " ms." << std::endl;
   }
 
   if (!verifyFileConsistency(passing_lane_csv.c_str()))

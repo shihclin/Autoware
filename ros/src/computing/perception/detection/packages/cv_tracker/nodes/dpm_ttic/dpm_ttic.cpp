@@ -42,20 +42,27 @@
 
 #include <dpm_ttic.hpp>
 
+#include <chrono>
+
 #define XSTR(x) #x
 #define STR(x) XSTR(x)
+
+
+static double dpmttic_time = 0.0;
+static std::chrono::time_point<std::chrono::system_clock> dpmttic_start, dpmttic_end;
 
 static ros::Publisher image_obj_pub;
 
 #if defined(HAS_GPU)
 static DPMTTICGPU *gpu_model;
-static bool use_gpu = true;
+static bool use_gpu = false;
 #endif
 static DPMTTIC *ttic_model;
 
 static DPMTTICParam ttic_param;
 
-static std::string object_class;static long int counter;
+static std::string object_class;
+static long int counter;
 
 static std::string image_topic_name;
 
@@ -85,6 +92,7 @@ static void result_to_image_obj_message(cv_tracker::image_obj& msg, const DPMTTI
 
 static void image_raw_cb(const sensor_msgs::Image& image_source)
 {
+	dpmttic_start = std::chrono::system_clock::now();
 
 	cv_bridge::CvImagePtr cv_image = cv_bridge::toCvCopy(image_source, sensor_msgs::image_encodings::BGR8);
 	IplImage img = cv_image->image;
@@ -106,8 +114,14 @@ static void image_raw_cb(const sensor_msgs::Image& image_source)
 	}
 #endif
 
+	dpmttic_end = std::chrono::system_clock::now();
+
 	image_obj_pub.publish(msg);
 	counter++;
+	
+	dpmttic_time = std::chrono::duration_cast<std::chrono::milliseconds>(dpmttic_end - dpmttic_start).count();
+	std::cout << "--" <<std::endl;
+	std::cout << "DPM_ttic time: " << dpmttic_time << " ms. " << std::endl;	
 }
 
 static void config_cb(const runtime_manager::ConfigPedestrianDpm::ConstPtr& param)
@@ -138,6 +152,7 @@ int main(int argc, char* argv[])
 
 	ros::NodeHandle n;
 	ros::NodeHandle private_nh("~");
+
 
 	if (!private_nh.getParam("image_raw_topic", image_topic_name)) {
 		image_topic_name = "/image_raw";
@@ -190,6 +205,7 @@ int main(int argc, char* argv[])
 #endif
 
 	ros::Subscriber sub = n.subscribe(image_topic_name, 1, image_raw_cb);
+	//image_obj_pub = n.advertise<cv_tracker::image_obj>("image_obj", 1);
 	image_obj_pub = n.advertise<cv_tracker::image_obj>("image_obj", 1);
 
 	ros::Subscriber config_sub;

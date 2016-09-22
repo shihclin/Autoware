@@ -15,7 +15,7 @@
       <arg name="image_src_car" default="/image_raw"/>
 
       <!-- dpm detection -->
-      <node pkg="cv_tracker" name="dpm" type="dpm_ocv">
+      <node pkg="cv_tracker" name="dpm" type="dpm_ocv"  output="screen">
         <remap from="/config/obj_car/dpm" to="/config/car_dpm"/>
         <param name="detection_class_name" type="str" value="car"/>
         <param name="model_file" type="str" value="$(arg model_file_car)"/>
@@ -36,7 +36,7 @@
       <arg name="image_src_pedestrian" default="/image_raw"/>
 
       <!-- dpm detection -->
-      <node pkg="cv_tracker" name="dpm" type="dpm_ocv">
+      <node pkg="cv_tracker" name="dpm" type="dpm_ocv"   output="screen">
         <remap from="/config/obj_person/dpm" to="/config/pedestrian_dpm"/>
         <param name="detection_class_name" type="str" value="person"/>
         <param name="model_file" type="str" value="$(arg model_file_pedestrian)"/>

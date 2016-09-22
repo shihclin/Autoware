@@ -554,7 +554,7 @@ int getNextWaypoint()
     // if search waypoint is the last
     if (i == (path_size - 1))
     {
-      ROS_INFO("search waypoint is the last");
+      //ROS_INFO("search waypoint is the last");
       return i;
     }
 
@@ -649,6 +649,7 @@ void publishSuccess(geometry_msgs::Twist t)
 
 void doPurePursuit()
 {
+
   bool interpolate_flag = false;
 
   // search next waypoint
@@ -662,6 +663,7 @@ void doPurePursuit()
 
   displayNextWaypoint(next_waypoint);
   displaySearchRadius(getLookAheadThreshold(0));
+
 
   /*=====*/
   PurePursuit_start = std::chrono::system_clock::now();
@@ -697,8 +699,8 @@ void doPurePursuit()
   publishSuccess(calcTwist(calcCurvature(next_target), getCmdVelocity(0)));
   /*=====*/
   PurePursuit_end = std::chrono::system_clock::now();
-  exe_time	  = std::chrono::duration_cast<std::chrono::microseconds>(PurePursuit_end - PurePursuit_start).count() / 1000.0;
-  std::cout << "Pure Pursuit Execution Time: " << exe_time << " ms." << std::endl;
+  exe_time	  = std::chrono::duration_cast<std::chrono::microseconds>(PurePursuit_end - PurePursuit_start).count();
+  std::cout << "Pure Pursuiting time: " << exe_time << " us." << std::endl;
   /*=====*/ 
 
 // ROS_INFO("linear : %lf, angular : %lf",twist.twist.linear.x,twist.twist.angular.z);
@@ -751,13 +753,13 @@ int main(int argc, char **argv)
     // check topic
     if (!g_waypoint_set || !g_pose_set)
     {
-      ROS_INFO_STREAM("topic waiting...");
+      //ROS_INFO_STREAM("topic waiting...");
       loop_rate.sleep();
       continue;
     }
     else
     {
-      // ROS_INFO("topic subscribed!");
+      //ROS_INFO("topic subscribed!");
     }
     doPurePursuit();
     loop_rate.sleep();

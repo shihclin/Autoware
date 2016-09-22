@@ -34,6 +34,16 @@
 #include <fusion_func.h>
 #include <runtime_manager/ConfigCarFusion.h>
 
+/*=============*/
+#include <chrono>
+
+/*===============*/
+static double range_time = 0.0;
+static double pi_time = 0.0;
+static std::chrono::time_point<std::chrono::system_clock> range_start, range_end, pi_start, pi_end;
+/*===============*/
+
+
 static void publishTopic();
 static ros::Publisher fused_objects;
 static std_msgs::Header sensor_header;
@@ -45,7 +55,13 @@ static void DetectedObjectsCallback(const cv_tracker::image_obj& image_object)
     sensor_header = image_object.header;
     setDetectedObjects(image_object);
     if (ready_) {
+	/*====*/
+	range_start = std::chrono::system_clock::now();
         fuse();
+	/*=====*/
+	range_end = std::chrono::system_clock::now();
+	range_time = std::chrono::duration_cast<std::chrono::milliseconds>(range_end - range_start).count();
+	std::cout << "Ranging detect_obj time: " << range_time << " ms." << std::endl;
         publishTopic();
         ready_ = false;
         return;
@@ -67,8 +83,15 @@ static void PointsImageCallback(const points2image::PointsImage& points_image)
     sensor_header = points_image.header;
     setPointsImage(points_image);
     if (ready_) {
-		fuse();
-		publishTopic();
+	/*====*/
+        pi_start = std::chrono::system_clock::now();
+	fuse();
+        /*=====*/
+        pi_end = std::chrono::system_clock::now();
+        pi_time = std::chrono::duration_cast<std::chrono::milliseconds>(pi_end - pi_start).count();
+        std::cout << "Ranging point2image time: " << pi_time << " ms." << std::endl;
+
+	publishTopic();
         ready_ = false;
         return;
     }
@@ -101,6 +124,7 @@ int main(int argc, char **argv)
 {
 	init();
 	ros::init(argc, argv, "range_fusion");
+	ROS_INFO("Enter Range Fusion");
 
 	ros::NodeHandle n;
 	ros::NodeHandle private_nh("~");
@@ -109,12 +133,13 @@ int main(int argc, char **argv)
 	std::string points_topic;
 	if (private_nh.getParam("image_node", image_topic))
 	{
-		ROS_INFO("Range Fusion: Setting image node to %s", image_topic.c_str());
+		ROS_INFO("Range Fusion: Setting image node to image_obj");
+		//ROS_INFO("Range Fusion: Setting image node to %s", image_topic.c_str());
 	}
 	else
 	{
-		ROS_INFO("Range Fusion: No image node received, defaulting to image_obj_ranged, you can use _image_node:=YOUR_TOPIC");
-		image_topic = "image_obj_ranged";
+		ROS_INFO("Range Fusion: No image node received, defaulting to image_obj, you can use _image_node:=YOUR_TOPIC");
+		image_topic = "image_obj";
 	}
 	if (private_nh.getParam("points_node", points_topic))
 	{
@@ -126,16 +151,14 @@ int main(int argc, char **argv)
 		points_topic = "/vscan_image";
 	}
 
-//	ros::Subscriber image_obj_sub = n.subscribe("/obj_car/image_obj", 1, DetectedObjectsCallback);
-	ros::Subscriber image_obj_sub = n.subscribe(image_topic, 1, DetectedObjectsCallback);
+	ros::Subscriber image_obj_sub = n.subscribe("image_obj", 1, DetectedObjectsCallback);
+	//ros::Subscriber image_obj_sub = n.subscribe(image_topic, 1, DetectedObjectsCallback);
 	//ros::Subscriber scan_image_sub = n.subscribe("scan_image", 1, ScanImageCallback);
 	ros::Subscriber points_image_sub =n.subscribe(points_topic, 1, PointsImageCallback);
 #if _DEBUG
 	ros::Subscriber image_sub = n.subscribe(IMAGE_TOPIC, 1, IMAGE_CALLBACK);
 #endif
-	fused_objects = n.advertise<cv_tracker::image_obj_ranged>("/image_obj_ranged", 1);
-	//fused_objects = n.advertise<cv_tracker::image_obj_ranged>("image_obj_ranged", 1);
-	//fused_objects = n.advertise<cv_tracker::image_obj_ranged>("image_obj", 1);
+	fused_objects = n.advertise<cv_tracker::image_obj_ranged>("image_obj_ranged", 1);
 
 	ros::Subscriber config_subscriber;
 	std::string config_topic("/config");

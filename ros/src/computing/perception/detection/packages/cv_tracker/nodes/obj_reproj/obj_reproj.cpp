@@ -69,6 +69,8 @@
 #include "calibration_camera_lidar/projection_matrix.h"
 #include <sensor_msgs/CameraInfo.h>
 #include <mutex>
+#include <chrono>
+
 
 #ifdef HAVE_JSK_PLUGIN
 #include "jsk_recognition_msgs/BoundingBox.h"
@@ -79,6 +81,9 @@
 #define STR(x) XSTR(x)
 
 using namespace std;
+
+static double proj_time = 0.0;
+static chrono::time_point<std::chrono::system_clock> proj_start, proj_end;
 
 static constexpr double LOOP_RATE = 15.0;
 
@@ -106,7 +111,7 @@ static std::mutex mtx_flag_ndt_pose;
 //flag for comfirming whether updating position or not
 static bool gnssGetFlag;
 static bool ndtGetFlag;
-static bool ready_;
+static bool ready_ = false;
 
 //store own position and direction now.updated by position_getter
 static LOCATION gnss_loc;
@@ -374,8 +379,12 @@ void locatePublisher(void){
 
 static void obj_pos_xyzCallback(const cv_tracker::image_obj_tracked& fused_objects)
 {
+ 
   if (!ready_)
     return;
+
+  proj_start = std::chrono::system_clock::now();
+
   image_obj_tracked_time = fused_objects.header.stamp;
 
   LOCK(mtx_cp_vector);
@@ -429,6 +438,11 @@ static void obj_pos_xyzCallback(const cv_tracker::image_obj_tracked& fused_objec
       UNLOCK(mtx_flag_ndt_pose);
     }
     //  }
+
+    proj_end = std::chrono::system_clock::now();
+    proj_time = std::chrono::duration_cast<std::chrono::microseconds>(proj_end - proj_start).count();
+    std::cout << "Object projecting time: " << proj_time << " us." << std::endl;
+
 }
 
 #ifdef NEVER // XXX No one calls this functions. caller is comment out
@@ -482,9 +496,8 @@ static void position_getter_ndt(const geometry_msgs::PoseStamped &pose){
 int main(int argc, char **argv){
 
   ros::init(argc ,argv, "obj_reproj") ;
-  cout << "obj_reproj" << endl;
 
-  ready_ = false;
+  //ready_ = false;
 
   isReady_obj_pos_xyz = false;
   isReady_ndt_pose    = false;
@@ -510,7 +523,7 @@ int main(int argc, char **argv){
 
   ros::Subscriber obj_pos_xyz = n.subscribe("image_obj_tracked", 1, obj_pos_xyzCallback);
 
-  ros::Subscriber ndt_pose = n.subscribe("/current_pose", 1, position_getter_ndt);
+  //ros::Subscriber ndt_pose = n.subscribe("/current_pose", 1, position_getter_ndt);
   pub = n.advertise<cv_tracker::obj_label>("obj_label",1);
   marker_pub = n.advertise<visualization_msgs::MarkerArray>("obj_label_marker", 1);
 

@@ -106,7 +106,7 @@ FLOAT *dpm_ttic_cpu_ini_scales(Model_info *MI,IplImage *IM,int X,int Y) //X,Y le
 
 		if(max_scale<interval) max_scale = interval;
 		MI->max_scale=max_scale;
-		printf("max_scale:%d\n",max_scale);
+		//printf("max_scale:%d\n",max_scale);
 		MI->IM_HEIGHT=IM->height;
 		/*printf("高さ%d\n",MI->IM_HEIGHT);*/
 		MI->IM_WIDTH=IM->width;
@@ -367,16 +367,16 @@ static FLOAT *calc_feature(FLOAT *SRC,int *ISIZE,int *FTSIZE,int sbin)
 static FLOAT *Ipl_to_FLOAT(IplImage *Input)	//get intensity data (FLOAT) of input
 {
 	const int width = Input->width;
-	printf("%d\n",width);
+	//printf("%d\n",width);
 	const int height = Input->height;
-	printf("%d\n",height);
+	//printf("%d\n",height);
 	const int nChannels = Input->nChannels;
-	printf("%d\n",nChannels);
+	//printf("%d\n",nChannels);
 	const int SQ = height*width;
 	const int WS = Input->widthStep;
 
 	FLOAT *Output = (FLOAT *)malloc(sizeof(FLOAT)*height*width*nChannels);
-	printf("%d",height*width*nChannels);
+	//printf("%d",height*width*nChannels);
 
 	FLOAT *R= Output;
 	FLOAT *G= Output+SQ;

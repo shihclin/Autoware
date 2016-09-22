@@ -11,6 +11,11 @@
 #include <mutex>
 #include <std_msgs/Time.h>
 
+#include <chrono>
+
+static double objfu_time = 0.0;
+static std::chrono::time_point<std::chrono::system_clock> objfu_start, objfu_end;
+
 /* flag for comfirming whether multiple topics are received */
 static bool isReady_obj_label;
 static bool isReady_cluster_centroids;

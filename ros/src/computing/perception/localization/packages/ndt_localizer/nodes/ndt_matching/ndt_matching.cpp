@@ -567,8 +567,9 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     transform.setRotation(current_q);
     br.sendTransform(tf::StampedTransform(transform, current_scan_time, "/map", "/base_link"));
 
+
     matching_end = std::chrono::system_clock::now();
-    exe_time = std::chrono::duration_cast<std::chrono::microseconds>(matching_end - matching_start).count() / 1000.0;
+    exe_time = std::chrono::duration_cast<std::chrono::milliseconds>(matching_end - matching_start).count();
     time_ndt_matching.data = exe_time;
     time_ndt_matching_pub.publish(time_ndt_matching);
 
@@ -624,25 +625,25 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
             << ndt_reliability.data << "," << current_velocity << "," << current_velocity_smooth << "," << current_accel
             << "," << angular_velocity << "," << time_ndt_matching.data << "," << align_time << "," << getFitnessScore_time << std::endl;
 
-    std::cout << "-----------------------------------------------------------------" << std::endl;
-    std::cout << "NDT Matching Localizer" << std::endl;
-    std::cout << "Sequence: " << input->header.seq << std::endl;
-    std::cout << "Timestamp: " << input->header.stamp << std::endl;
-    std::cout << "Frame ID: " << input->header.frame_id << std::endl;
+    //std::cout << "-----------------------------------------------------------------" << std::endl;
+    //std::cout << "NDT Matching Localizer" << std::endl;
+    //std::cout << "Sequence: " << input->header.seq << std::endl;
+    //std::cout << "Timestamp: " << input->header.stamp << std::endl;
+    //std::cout << "Frame ID: " << input->header.frame_id << std::endl;
     //		std::cout << "Number of Scan Points: " << scan_ptr->size() << " points." << std::endl;
-    std::cout << "Number of Filtered Scan Points: " << scan_points_num << " points." << std::endl;
-    std::cout << "NDT has converged: " << ndt.hasConverged() << std::endl;
-    std::cout << "Fitness Score: " << fitness_score << std::endl;
-    std::cout << "Transformation Probability: " << ndt.getTransformationProbability() << std::endl;
-    std::cout << "Execution Time: " << exe_time << " ms." << std::endl;
-    std::cout << "Number of Iterations: " << ndt.getFinalNumIteration() << std::endl;
-    std::cout << "NDT Reliability: " << ndt_reliability.data << std::endl;
-    std::cout << "(x,y,z,roll,pitch,yaw): " << std::endl;
-    std::cout << "(" << current_pose.x << ", " << current_pose.y << ", " << current_pose.z << ", " << current_pose.roll
-              << ", " << current_pose.pitch << ", " << current_pose.yaw << ")" << std::endl;
-    std::cout << "Transformation Matrix: " << std::endl;
-    std::cout << t << std::endl;
-    std::cout << "-----------------------------------------------------------------" << std::endl;
+    //std::cout << "Number of Filtered Scan Points: " << scan_points_num << " points." << std::endl;
+    //std::cout << "NDT has converged: " << ndt.hasConverged() << std::endl;
+    //std::cout << "Fitness Score: " << fitness_score << std::endl;
+    //std::cout << "Transformation Probability: " << ndt.getTransformationProbability() << std::endl;
+    std::cout << "NDT matching time: " << exe_time << " ms." << std::endl;
+    //std::cout << "Number of Iterations: " << ndt.getFinalNumIteration() << std::endl;
+    //std::cout << "NDT Reliability: " << ndt_reliability.data << std::endl;
+    //std::cout << "(x,y,z,roll,pitch,yaw): " << std::endl;
+    //std::cout << "(" << current_pose.x << ", " << current_pose.y << ", " << current_pose.z << ", " << current_pose.roll
+    //          << ", " << current_pose.pitch << ", " << current_pose.yaw << ")" << std::endl;
+    //std::cout << "Transformation Matrix: " << std::endl;
+    //std::cout << t << std::endl;
+    //std::cout << "-----------------------------------------------------------------" << std::endl;
 
     // Update offset
     if (_offset == "linear")

@@ -40,6 +40,12 @@
 
 #include <lane_planner/vmap.hpp>
 
+#include <chrono>
+
+static double lane_navi_time = 0.0;
+static std::chrono::time_point<std::chrono::system_clock> lane_navi_start, lane_navi_end;
+
+
 namespace {
 
 int waypoint_max;
@@ -97,6 +103,9 @@ void create_waypoint(const tablet_socket::route_cmd& msg)
 	std_msgs::Header header;
 	header.stamp = ros::Time::now();
 	header.frame_id = frame_id;
+
+	/*====*/
+        lane_navi_start = std::chrono::system_clock::now();
 
 	if (all_vmap.points.empty() || all_vmap.lanes.empty() || all_vmap.nodes.empty()) {
 		cached_route.header = header;
@@ -161,6 +170,12 @@ void create_waypoint(const tablet_socket::route_cmd& msg)
 	}
 	waypoint_pub.publish(lane_waypoint);
 
+        /*====*/
+        lane_navi_end = std::chrono::system_clock::now();
+        lane_navi_time = std::chrono::duration_cast<std::chrono::milliseconds>(lane_navi_end - lane_navi_start).count();
+        std::cout << "Lane navi time: " << lane_navi_time << " ms." << std::endl;
+
+
 	for (size_t i = 0; i < fine_vmaps.size(); ++i) {
 		std::stringstream ss;
 		ss << "_" << i;
@@ -212,6 +227,8 @@ void cache_node(const map_file::NodeArray& msg)
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "lane_navi");
+	ROS_INFO("Enter Lane navi");
+
 
 	ros::NodeHandle n;
 

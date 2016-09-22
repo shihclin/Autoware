@@ -112,7 +112,7 @@ RESULT *dpm_ttic_cpu_get_new_rects(IplImage *Image,MODEL *MO,FLOAT *boxes,int *N
 		OPP[3] = (int)((FLOAT)PP[3]/ratio);
 
 		//for debug
-		printf("scale:%f score:%f type:%d\n",CUR->scale[ii],CUR->score[ii],CUR->type[ii]);
+		//printf("scale:%f score:%f type:%d\n",CUR->scale[ii],CUR->score[ii],CUR->type[ii]);
 	}
 	s_free(Avec);
 	return(CUR);

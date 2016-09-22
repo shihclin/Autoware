@@ -35,6 +35,11 @@
 #include <waypoint_follower/LaneArray.h>
 
 #include <lane_planner/vmap.hpp>
+#include <chrono>
+
+static double lane_stop_time = 0.0;
+static std::chrono::time_point<std::chrono::system_clock> lane_stop_start, lane_stop_end;
+
 
 namespace {
 
@@ -49,6 +54,9 @@ const waypoint_follower::LaneArray *previous_lane = &current_red_lane;
 
 void select_current_lane(const runtime_manager::traffic_light& msg)
 {
+        /*====*/
+        lane_stop_start = std::chrono::system_clock::now();
+	
 	const waypoint_follower::LaneArray *current;
 	switch (msg.traffic_light) {
 	case lane_planner::vmap::TRAFFIC_LIGHT_RED:
@@ -73,6 +81,12 @@ void select_current_lane(const runtime_manager::traffic_light& msg)
 	traffic_pub.publish(*current);
 
 	previous_lane = current;
+
+        /*====*/
+        lane_stop_end = std::chrono::system_clock::now();
+        lane_stop_time = std::chrono::duration_cast<std::chrono::milliseconds>(lane_stop_end - lane_stop_start).count();
+        std::cout << "Lane stop time: " << lane_stop_time << " ms." << std::endl;
+
 }
 
 void receive_auto_detection(const runtime_manager::traffic_light& msg)
@@ -107,6 +121,8 @@ void config_parameter(const runtime_manager::ConfigLaneStop& msg)
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "lane_stop");
+	ROS_INFO("Enter Lane Stop");
+
 
 	ros::NodeHandle n;
 

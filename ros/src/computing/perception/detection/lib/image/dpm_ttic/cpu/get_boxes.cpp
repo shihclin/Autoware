@@ -454,12 +454,12 @@ FLOAT *dpm_ttic_cpu_get_boxes(FLOAT **features,FLOAT *scales,int *FSIZE,MODEL *M
 		free_partmatch(partmatch,MO);
 	}
 ////level
-
+	/*
 	printf("root SCORE : %f\n", time_root_score);
 	printf("part SCORE : %f\n", time_part_score);
 	printf("dt  : %f\n", time_dt);
 	printf("calc_a_score : %f\n", time_calc_a_score);
-
+	*/
 	//release
 	s_free(rm_size);
 	s_free(pm_size);
