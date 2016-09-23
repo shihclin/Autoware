@@ -45,6 +45,8 @@
 #include <std_msgs/Int32.h>
 #include <runtime_manager/ConfigVelocitySet.h>
 #include <iostream>
+#include <sstream>
+#include <fstream>
 
 #include "waypoint_follower/lane.h"
 #include "waypoint_follower/libwaypoint_follower.h"
@@ -52,13 +54,19 @@
 
 #include <chrono>
 /*=====*/
-static std::chrono::time_point<std::chrono::system_clock> timestamp_start, timestamp_1, timestamp_2, timestamp_3, timestamp_end;
+static std::chrono::time_point<std::chrono::system_clock> timestamp_start, timestamp_end;
 
-static double exe_time_0, exe_time_1, exe_time_2, exe_time_3;
+/*=====*/
+static std::ofstream ofs_times;
+static std::ofstream ofs_histo;
+static std::string filename;
+static std::chrono::time_point<std::chrono::system_clock> begin, tick;
+static double timestamp;
+static double exe_time = 0.0;
 
 namespace
 {
-const int LOOP_RATE = 10;
+const int LOOP_RATE = 10; //Hz
 
 geometry_msgs::TwistStamped g_current_twist;
 geometry_msgs::PoseStamped g_localizer_pose;  // pose of sensor
@@ -830,6 +838,20 @@ void changeWaypoint(EControl detection_result)
     g_temporal_waypoints_pub.publish(g_path_change.getTemporalWaypoints());
   }
 
+    /*=====*/
+    // Write log
+    if (!ofs_times || !ofs_histo)
+    {
+    std::cerr << "Could not write logging file." << std::endl;
+    exit(1);
+    }
+
+    tick = std::chrono::system_clock::now();
+    timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
+    ofs_times << ", " << timestamp << " " << exe_time;
+    ofs_histo << ", " << exe_time;
+
+    std::cout << "Velocity setting time: " << exe_time << " us." << std::endl;
   return;
 }
 
@@ -845,6 +867,12 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "velocity_set");
 
   std::cout<<"Enter Velocity Select"<<std::endl;
+  /*=====*/
+  //For graph
+  ofs_times.open("velocity_set_timeseries.csv", std::ios::app);
+  ofs_times << "Velocity Setting";
+  ofs_histo.open("velocity_set_histogram.csv", std::ios::app);
+  begin = std::chrono::system_clock::now();
 
 
   ros::NodeHandle nh;
@@ -880,7 +908,8 @@ int main(int argc, char **argv)
       vmap.setCrossWalkPoints();
 
     //while(ros::ok()){
-    if (g_pose_flag == false || g_path_flag == false)
+    if (!g_pose_flag || !g_path_flag)
+    //if (g_pose_flag == false || g_path_flag == false)
     //while (g_pose_flag == false || g_path_flag == false)
     { /* 
       std::cout << "\rtopic waiting          \rtopic waiting";
@@ -904,39 +933,25 @@ int main(int argc, char **argv)
 
     /*=====*/
     timestamp_start = std::chrono::system_clock::now();
-    //
+    
     vmap.setDetectionWaypoint(findCrossWalk());
     
-    /*=====*/
-    timestamp_1 = std::chrono::system_clock::now();
-    //
     EControl detection_result = obstacleDetection();
 
-
-    /*=====*/
-    timestamp_2 = std::chrono::system_clock::now();
-    //
     changeWaypoint(detection_result);
 
-    /*=====*/
-    timestamp_3 = std::chrono::system_clock::now();
-    //
     g_vscan.clear();
 
     /*=====*/
     timestamp_end = std::chrono::system_clock::now();
     //
 
-   exe_time_0 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_1 - timestamp_start).count();
-   exe_time_1 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_2 - timestamp_1).count();
-   exe_time_2 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_3 - timestamp_2).count();
-   exe_time_3 = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_end - timestamp_3).count();
+   exe_time = std::chrono::duration_cast<std::chrono::microseconds>(timestamp_end - timestamp_start).count();
 
-    std::cout << "FindCrossWoalk Execution Time: " << exe_time_0 << " us." << std::endl;
-    std::cout << "Obstacle Detection Execution Time: " << exe_time_1 << " us." << std::endl;
-    std::cout << "Change WP Execution Time: " << exe_time_2 << " us." << std::endl;
-    std::cout << "Reset Execution Time: " << exe_time_3 << " us." << std::endl;
-    std::cout << "Total Execution Time: " << exe_time_0+exe_time_1+exe_time_2+exe_time_3 << " us." << std::endl;
+   // std::cout << "FindCrossWoalk Execution Time: " << exe_time_0 << " us." << std::endl;
+   // std::cout << "Obstacle Detection Execution Time: " << exe_time_1 << " us." << std::endl;
+   // std::cout << "Change WP Execution Time: " << exe_time_2 << " us." << std::endl;
+   // std::cout << "Reset Execution Time: " << exe_time_3 << " us." << std::endl;
 
     loop_rate.sleep();
   }

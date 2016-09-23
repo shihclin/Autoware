@@ -86,7 +86,8 @@ void TwistCmdCallback(const geometry_msgs::TwistStampedConstPtr &msg)
   /*=====*/
   twist_end = std::chrono::system_clock::now();
   exe_time  = std::chrono::duration_cast<std::chrono::microseconds>(twist_end - twist_start).count();
-  std::cout << "Twist filtering time: " << exe_time << " us." << std::endl;
+  //if(exe_time != 0.0)
+  //	std::cout << "Angle setting time: " << exe_time << " us." << std::endl;
   /*=====*/
 
   //ROS_INFO("twist.linear.x = %lf, twist.angular.z = %lf",twist.twist.linear.x,twist.twist.angular.z);

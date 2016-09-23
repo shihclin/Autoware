@@ -54,10 +54,11 @@
 #include <iostream>
 #include <stdio.h>
 
+#include <fstream>
 #include <sstream>
 #include <algorithm>
 #include <iterator>
-
+#include <chrono>
 
 
 #define SSTR( x ) dynamic_cast< std::ostringstream & >( \
@@ -80,6 +81,14 @@ static bool 		USE_ORB;
 static bool 		track_ready_;
 static bool 		detect_ready_;
 static cv_tracker::image_obj_tracked kf_objects_msg_;
+
+
+static std::ofstream ofs_times;
+static std::ofstream ofs_histo;
+static std::string filename;
+static std::chrono::time_point<std::chrono::system_clock> begin, tick;
+static double timestamp;
+static double exe_time = 0.0;
 
 
 struct kstate
@@ -805,7 +814,23 @@ void trackAndDrawObjects(cv::Mat& image, int frameNumber, std::vector<cv::Latent
 	tm.start();
 	//std::cout << endl << "START tracking...";
 	doTracking(detections, frameNumber, kstates, active, image, tracked_detections, colors);
+
 	tm.stop();
+	exe_time = tm.getTimeMilli();
+
+        /*=====*/
+        // Write log
+        if (!ofs_times || !ofs_histo)
+        {
+        std::cerr << "Could not write logging file." << std::endl;
+        exit(1);
+        }
+
+	tick = std::chrono::system_clock::now();
+        timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;        
+        ofs_times << ", " << timestamp << " " << exe_time;
+        ofs_histo << ", " << exe_time;
+
 	std::cout << "Tracking time = " << tm.getTimeMilli() << " ms." << std::endl;
 
 	//ROS
@@ -958,6 +983,13 @@ int kf_main(int argc, char* argv[])
 	cv::generateColors(_colors, 25);
 
 	ROS_INFO("Enter kf_track");
+
+        /*=====*/
+        //For graph
+        ofs_times.open("kf_track_timeseries.csv", std::ios::app);
+        ofs_times << "Tracking";
+        ofs_histo.open("kf_track_histogram.csv", std::ios::app);
+	begin = std::chrono::system_clock::now();
 
 	std::string image_topic;
 	std::string obj_topic;

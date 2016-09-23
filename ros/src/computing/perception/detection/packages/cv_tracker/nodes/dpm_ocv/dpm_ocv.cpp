@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sstream>
+#include <fstream>
 #include <string>
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/contrib/contrib.hpp>
@@ -10,7 +12,7 @@
 #include <runtime_manager/ConfigCarDpm.h>
 
 #include <dpm_ocv.hpp>
-
+#include <chrono>
 
 
 #define XSTR(x) #x
@@ -20,13 +22,21 @@
 static bool use_gpu = true;
 #endif
 
+/*=====*/
+static std::ofstream ofs_times;
+static std::ofstream ofs_histo;
+static std::string filename;
+static std::chrono::time_point<std::chrono::system_clock> begin, tick;
+static double timestamp;
+static double exe_time = 0.0;
 
-//static double dpm_time = 0.0;
-//static chrono::time_point<std::chrono::system_clock> dpm_start, dpm_end;
 
 static constexpr float SCORE_THRESHOLD = -0.5;
 static constexpr int NUM_CELLS = 8;
 static constexpr int NUM_BINS = 9;
+
+
+
 
 class objectDetect
 {
@@ -194,12 +204,24 @@ void objectDetect::imageCallback(const sensor_msgs::ImageConstPtr& img)
 	}
 
 	tm.stop();
+	exe_time = tm.getTimeMilli();
 	detect_pub_.publish(msg);
 
-	//dpm_end = std::chrono::system_clock::now();
-	//dpm_time = std::chrono::duration_cast<std::chrono::milliseconds>(dpm_end - dpm_start).count();
+	/*=====*/
+	// Write log
+	if (!ofs_times || !ofs_histo)
+	{
+	std::cerr << "Could not write logging file." << std::endl;
+	exit(1);
+	}
+	
+	tick = std::chrono::system_clock::now();
+	timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
+	ofs_times << ", " << timestamp << " " << exe_time;
+	ofs_histo << ", " << exe_time;
+
 	std::cout << "--" <<std::endl;
-	std::cout << "dpm_ocv time: " << tm.getTimeMilli() << " ms." << std::endl;
+	std::cout << "dpm_ocv time: " << exe_time << " ms." << std::endl;
 
 
 }
@@ -217,6 +239,13 @@ int main(int argc, char* argv[])
 {
 	ros::init(argc, argv, "dpm_ocv");
 	ROS_INFO("Enter dpm_ocv");
+
+	/*=====*/
+	//For graph
+	ofs_times.open("dpm_ocv_detection_timeseries.csv", std::ios::app);
+	ofs_times << "Detection";
+	ofs_histo.open("dpm_ocv_detection_histogram.csv", std::ios::app);
+	begin = std::chrono::system_clock::now();
 
 	objectDetect detector;
 

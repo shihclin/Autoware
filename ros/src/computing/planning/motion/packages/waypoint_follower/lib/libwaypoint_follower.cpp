@@ -217,7 +217,7 @@ int getClosestWaypoint(const waypoint_follower::lane &current_path, geometry_msg
   }
   else
   {
-    ROS_INFO("no candidate. search closest waypoint from all waypoints...");
+    //ROS_INFO("no candidate. search closest waypoint from all waypoints...");
     // if there is no candidate...
     int waypoint_min = -1;
     double distance_min = DBL_MAX;

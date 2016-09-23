@@ -47,6 +47,10 @@
 
 /*=============*/
 #include <chrono>
+#include <iostream>
+#include <sstream>
+#include <fstream>
+
 
 namespace
 {
@@ -87,6 +91,12 @@ ros::Publisher _line_point_pub;
 
 
 /*===============*/
+/*=====*/
+static std::ofstream ofs_times;
+static std::ofstream ofs_histo;
+static std::string filename;
+static std::chrono::time_point<std::chrono::system_clock> begin, tick;
+static double timestamp;
 static double exe_time = 0.0;
 static std::chrono::time_point<std::chrono::system_clock> PurePursuit_start, PurePursuit_end;
 /*===============*/
@@ -700,7 +710,22 @@ void doPurePursuit()
   /*=====*/
   PurePursuit_end = std::chrono::system_clock::now();
   exe_time	  = std::chrono::duration_cast<std::chrono::microseconds>(PurePursuit_end - PurePursuit_start).count();
-  std::cout << "Pure Pursuiting time: " << exe_time << " us." << std::endl;
+
+  /*=====*/
+  // Write log
+  if (!ofs_times || !ofs_histo)
+  {
+     std::cerr << "Could not write logging file." << std::endl;
+     exit(1);
+  }
+
+
+  tick = std::chrono::system_clock::now();
+  timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
+  ofs_times << ", " << timestamp << " " << exe_time;
+  ofs_histo << ", " << exe_time;
+
+  std::cout << "Angle setting time: " << exe_time << " us." << std::endl;
   /*=====*/ 
 
 // ROS_INFO("linear : %lf, angular : %lf",twist.twist.linear.x,twist.twist.angular.z);
@@ -721,6 +746,12 @@ int main(int argc, char **argv)
 
   // set up ros
   ros::init(argc, argv, "pure_pursuit");
+  /*=====*/
+  //For graph
+  ofs_times.open("angle_set_timeseries.csv", std::ios::app);
+  ofs_times << "Angle Setting";
+  ofs_histo.open("angle_set_histogram.csv", std::ios::app);
+  begin = std::chrono::system_clock::now();
 
   ros::NodeHandle nh;
   ros::NodeHandle private_nh("~");

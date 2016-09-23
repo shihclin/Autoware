@@ -175,8 +175,14 @@ static std_msgs::Float32 ndt_reliability;
 
 static bool _use_openmp = false;
 
-static std::ofstream ofs;
+
+//Profiling File
+static std::ofstream ofs_times;
+static std::ofstream ofs_histo;
 static std::string filename;
+static std::chrono::time_point<std::chrono::system_clock> begin, tick;
+static double timestamp;
+
 
 static void param_callback(const runtime_manager::ConfigNdt::ConstPtr& input)
 {
@@ -362,13 +368,13 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 
     pcl::fromROSMsg(*input, filtered_scan);
     pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_scan_ptr(new pcl::PointCloud<pcl::PointXYZ>(filtered_scan));
-    int scan_points_num = filtered_scan_ptr->size();
+    //int scan_points_num = filtered_scan_ptr->size();
 
     Eigen::Matrix4f t(Eigen::Matrix4f::Identity());   // base_link
     Eigen::Matrix4f t2(Eigen::Matrix4f::Identity());  // localizer
 
     std::chrono::time_point<std::chrono::system_clock> align_start, align_end, getFitnessScore_start, getFitnessScore_end;
-    static double align_time, getFitnessScore_time = 0.0;
+    //static double align_time, getFitnessScore_time = 0.0;
 
     // Setting point cloud to be aligned.
     ndt.setInputSource(filtered_scan_ptr);
@@ -401,7 +407,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 #ifdef USE_FAST_PCL
     }
 #endif
-    align_time = std::chrono::duration_cast<std::chrono::microseconds>(align_end - align_start).count() / 1000.0;
+    //align_time = std::chrono::duration_cast<std::chrono::microseconds>(align_end - align_start).count() / 1000.0;
 
     t = ndt.getFinalTransformation();  // localizer
     t2 = t * tf_ltob;                  // base_link
@@ -420,7 +426,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 #ifdef USE_FAST_PCL
     }
 #endif
-    getFitnessScore_time = std::chrono::duration_cast<std::chrono::microseconds>(getFitnessScore_end - getFitnessScore_start).count() / 1000.0;
+    //getFitnessScore_time = std::chrono::duration_cast<std::chrono::microseconds>(getFitnessScore_end - getFitnessScore_start).count() / 1000.0;
 
     trans_probability = ndt.getTransformationProbability();
 
@@ -607,11 +613,12 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     ndt_reliability_pub.publish(ndt_reliability);
 
     // Write log
-    if (!ofs)
+    if (!ofs_times || !ofs_histo)
     {
       std::cerr << "Could not open " << filename << "." << std::endl;
       exit(1);
     }
+    /*
     ofs << input->header.seq << "," << scan_points_num << "," << step_size << "," << trans_eps << ","
     		<< std::fixed << std::setprecision(5) << current_pose.x << ","
 			<< std::fixed << std::setprecision(5) << current_pose.y << ","
@@ -624,6 +631,8 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
             << predict_pose_error << "," << iteration << "," << fitness_score << "," << trans_probability << ","
             << ndt_reliability.data << "," << current_velocity << "," << current_velocity_smooth << "," << current_accel
             << "," << angular_velocity << "," << time_ndt_matching.data << "," << align_time << "," << getFitnessScore_time << std::endl;
+    */
+
 
     //std::cout << "-----------------------------------------------------------------" << std::endl;
     //std::cout << "NDT Matching Localizer" << std::endl;
@@ -636,6 +645,10 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     //std::cout << "Fitness Score: " << fitness_score << std::endl;
     //std::cout << "Transformation Probability: " << ndt.getTransformationProbability() << std::endl;
     std::cout << "NDT matching time: " << exe_time << " ms." << std::endl;
+        tick = std::chrono::system_clock::now();
+        timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
+    	ofs_times << ", " << timestamp << " " << exe_time;
+    	ofs_histo << ", " << exe_time;
     //std::cout << "Number of Iterations: " << ndt.getFinalNumIteration() << std::endl;
     //std::cout << "NDT Reliability: " << ndt_reliability.data << std::endl;
     //std::cout << "(x,y,z,roll,pitch,yaw): " << std::endl;
@@ -703,7 +716,13 @@ int main(int argc, char** argv)
   std::tm *pnow = std::localtime(&now);
   std::strftime(buffer,80,"%Y%m%d_%H%M%S",pnow);
   filename = "ndt_matching_" + std::string(buffer) + ".csv";
-  ofs.open(filename.c_str(), std::ios::app);
+  //ofs.open(filename.c_str(), std::ios::app);
+  //For graph
+  ofs_times.open("ndt_matching_timeseries.csv", std::ios::app);
+  ofs_times << "Localization";
+  ofs_histo.open("ndt_matching_histogram.csv", std::ios::app);
+  begin = std::chrono::system_clock::now();
+
 
   // Geting parameters
   private_nh.getParam("use_gnss", _use_gnss);
