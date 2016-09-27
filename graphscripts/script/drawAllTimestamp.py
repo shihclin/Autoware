@@ -66,11 +66,17 @@ def parse_csv(filename):
   return raw_data, legend_labels
 
 # FIXME: Change the file name to plot
-localization = "ndt_matching_timeseries.csv"
-detection = "dpm_ocv_detection_timeseries.csv"
-tracking = "kf_track_timeseries.csv"
-velocity_set = "velocity_set_timeseries.csv"
-angle_set = "angle_set_timeseries.csv"
+localization = "../csv/20160926_01/angle_set_timeseries.csv"
+detection = "../csv/20160926_02/angle_set_timeseries.csv"
+tracking = "../csv/20160926_03/angle_set_timeseries.csv"
+velocity_set = "../csv/20160926_04/angle_set_timeseries.csv"
+angle_set = "../csv/20160926_05/angle_set_timeseries.csv"
+
+#localization = "ndt_matching_timeseries.csv"
+#detection = "dpm_ocv_detection_timeseries.csv"
+#tracking = "kf_track_timeseries.csv"
+#velocity_set = "velocity_set_timeseries.csv"
+#angle_set = "angle_set_timeseries.csv"
 
 
 #if filename == "line_graph.csv":
@@ -87,6 +93,11 @@ ang_data, ang_labels = parse_csv(angle_set)
 
 
 #myList[:] = [x / myInt for x in myList]
+
+
+loc_data[loc_labels[0]]["y"][:] = [ x / 1000.0 for x in loc_data[loc_labels[0]]["y"]]
+det_data[det_labels[0]]["y"][:] = [ x / 1000.0 for x in det_data[det_labels[0]]["y"]]
+tra_data[tra_labels[0]]["y"][:] = [ x / 1000.0 for x in tra_data[tra_labels[0]]["y"]]
 vel_data[vel_labels[0]]["y"][:] = [ x / 1000.0 for x in vel_data[vel_labels[0]]["y"]]
 ang_data[ang_labels[0]]["y"][:] = [ x / 1000.0 for x in ang_data[ang_labels[0]]["y"]]
 
@@ -121,19 +132,20 @@ ax.plot(ang_data[ang_labels[0]]["x"], ang_data[ang_labels[0]]["y"], "-",
 # x-axis and y-axis labels
 ax.set_xlabel("Time (s)")
 ax.set_ylabel("Latency (ms)")
-#ax.set_yticks(np.arange(0, 400, 50))
+ax.set_ylim([0, 0.2])
+#ax.set_yticks(np.arange(0, 1))
 
 # legend
 #ax.legend(loc="center right")
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), fancybox=True, ncol=5)
+#ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), fancybox=True, ncol=5)
 
 # title
-#ax.set_title("Timestamp")
+ax.set_title("Reliability Test- Angle Setting")
 
 # grid
 ax.yaxis.grid()
 
-out_filename = "Timestamp" + ".png"
+out_filename = "Relia-ang" + ".png"
 
 plt.savefig(out_filename)
 #plt.show()
