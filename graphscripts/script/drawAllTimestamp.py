@@ -66,28 +66,55 @@ def parse_csv(filename):
   return raw_data, legend_labels
 
 # FIXME: Change the file name to plot
-filename = "angle_set_timeseries.csv"
+localization = "ndt_matching_timeseries.csv"
+detection = "dpm_ocv_detection_timeseries.csv"
+tracking = "kf_track_timeseries.csv"
+velocity_set = "velocity_set_timeseries.csv"
+angle_set = "angle_set_timeseries.csv"
 
 
-if filename == "line_graph.csv":
-  warnings.warn("line_graph.csv contains only bogus data, you should change "
-                "the filename to plot the data you want. (search for FIXME in "
-                "the code)")
+#if filename == "line_graph.csv":
+#  warnings.warn("line_graph.csv contains only bogus data, you should change "
+#                "the filename to plot the data you want. (search for FIXME in "
+#                "the code)")
 
-data, legend_labels = parse_csv(filename)
+#data, legend_labels = parse_csv(filename)
+loc_data, loc_labels = parse_csv(localization)
+det_data, det_labels = parse_csv(detection)
+tra_data, tra_labels = parse_csv(tracking)
+vel_data, vel_labels = parse_csv(velocity_set)
+ang_data, ang_labels = parse_csv(angle_set)
+
+
+#myList[:] = [x / myInt for x in myList]
+vel_data[vel_labels[0]]["y"][:] = [ x / 1000.0 for x in vel_data[vel_labels[0]]["y"]]
+ang_data[ang_labels[0]]["y"][:] = [ x / 1000.0 for x in ang_data[ang_labels[0]]["y"]]
+
 
 ax = plt.subplot(1, 1, 1)
 
-NUM_LINES = len(legend_labels)
+#NUM_LINES = len(legend_labels)
 
 # configs
-color_list = color_maker(NUM_LINES, map="brg")
-#color_list = color_maker(5, map="jet")
+#color_list = color_maker(NUM_LINES, map="brg")
+color_list = color_maker(5, map="jet")
 
 
-for i in range(NUM_LINES):
-    ax.plot(data[legend_labels[i]]["x"], data[legend_labels[i]]["y"], "-",
-        color=color_list[i], label=legend_labels[i], lw=1)
+#for j in 5:
+#    for i in range(NUM_LINES):
+#        ax.plot(data[legend_labels[i]]["x"], data[legend_labels[i]]["y"], "-",
+#            color=color_list[j], label=legend_labels[i], lw=1)
+
+ax.plot(loc_data[loc_labels[0]]["x"], loc_data[loc_labels[0]]["y"], "-",
+        color=color_list[0], label=loc_labels[0], lw=1)
+ax.plot(det_data[det_labels[0]]["x"], det_data[det_labels[0]]["y"], "-",
+        color=color_list[1], label=det_labels[0], lw=1)
+ax.plot(tra_data[tra_labels[0]]["x"], tra_data[tra_labels[0]]["y"], "-",
+        color=color_list[2], label=tra_labels[0], lw=1)
+ax.plot(vel_data[vel_labels[0]]["x"], vel_data[vel_labels[0]]["y"], "-",
+        color=color_list[3], label=vel_labels[0], lw=1)
+ax.plot(ang_data[ang_labels[0]]["x"], ang_data[ang_labels[0]]["y"], "-",
+        color=color_list[4], label=ang_labels[0], lw=1)
 
 
 #ax.axhline(y=490, color='red', linestyle='--', lw=1)
@@ -101,12 +128,12 @@ ax.set_ylabel("Latency (ms)")
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), fancybox=True, ncol=5)
 
 # title
-ax.set_title("Timestamp")
+#ax.set_title("Timestamp")
 
 # grid
 ax.yaxis.grid()
 
-out_filename = filename[:-3] + ".png"
+out_filename = "Timestamp" + ".png"
 
 plt.savefig(out_filename)
 #plt.show()

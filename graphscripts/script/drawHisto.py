@@ -15,9 +15,12 @@ def parse_csv(filename):
             raw_data.append(float(item))
     return raw_data
 
+
 filename = "angle_set_histogram.csv"
-data    = parse_csv(filename)
-out_filename = filename[:-3] + "png"
+csv_filename = "../csv/" + filename
+graph_filename = "../graph/" + filename
+data    = parse_csv(csv_filename)
+out_filename = graph_filename[:-3] + "png"
 
 
 n, bins, patches = plt.hist(data, 100, alpha=0.5, color='orange', label='Angle Setting')

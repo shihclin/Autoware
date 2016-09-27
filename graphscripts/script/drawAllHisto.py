@@ -15,12 +15,12 @@ def parse_csv(filename):
             raw_data.append(float(item))
     return raw_data
 
-loc_data    = parse_csv("ndt_matching_histogram.csv")
-det_data    = parse_csv("dpm_ocv_detection_histogram.csv")
-tra_data    = parse_csv("kf_track_histogram.csv")
-vel_data    = parse_csv("velocity_set_histogram.csv")
-ang_data    = parse_csv("angle_set_histogram.csv")
-out_filename = "Histogram.png"
+loc_data    = parse_csv("../csv/ndt_matching_histogram.csv")
+det_data    = parse_csv("../csv/dpm_ocv_detection_histogram.csv")
+tra_data    = parse_csv("../csv/kf_track_histogram.csv")
+vel_data    = parse_csv("../csv/velocity_set_histogram.csv")
+ang_data    = parse_csv("../csv/angle_set_histogram.csv")
+out_filename = "AllHistogram.png"
 
 #myList[:] = [x / myInt for x in myList]
 vel_data[:] = [x / 1000.0 for x in vel_data]
