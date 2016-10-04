@@ -63,6 +63,10 @@ static double euclid_distance(const geometry_msgs::Point pos1,
 /* fusion reprojected position and pointcloud centroids */
 static void fusion_objects(void)
 {
+
+    /*=====*/
+    objfu_start = std::chrono::system_clock::now();
+
     obj_label_t obj_label_current;
     std::vector<geometry_msgs::Point> centroids_current;
 
@@ -74,7 +78,8 @@ static void fusion_objects(void)
     LOCK(mtx_centroids);
     copy(centroids.begin(), centroids.end(), back_inserter(centroids_current));
     UNLOCK(mtx_centroids);
-
+    
+ 
     if (centroids_current.empty() || obj_label_current.reprojected_positions.empty() ||  obj_label_current.obj_id.empty()) {
         visualization_msgs::MarkerArray pub_msg;
         std_msgs::Time time;
@@ -214,6 +219,11 @@ static void fusion_objects(void)
     std_msgs::Time time;
     time.data = obj_pose_timestamp;
     obj_pose_timestamp_pub.publish(time);
+	
+    /*=====*/
+   objfu_end	= std::chrono::system_clock::now();
+   objfu_time = std::chrono::duration_cast<std::chrono::microseconds>(objfu_end - objfu_start).count();
+   std::cout << "Object fusion time: " << objfu_time << " us." << std::endl;
 }
 
 
@@ -238,6 +248,8 @@ void obj_label_cb(const cv_tracker::obj_label& obj_label_msg)
     LOCK(mtx_flag_obj_label);
     isReady_obj_label = true;
     UNLOCK(mtx_flag_obj_label);
+
+	//std::cout<<"OBJ_LABEL: "<<isReady_obj_label<<" "<<isReady_cluster_centroids<<std::endl;
 
     /* Publish fusion result if both of topics are ready */
    if (isReady_obj_label && isReady_cluster_centroids)
@@ -289,6 +301,8 @@ void cluster_centroids_cb(const lidar_tracker::centroids& cluster_centroids_msg)
     LOCK(mtx_flag_cluster_centroids);
     isReady_cluster_centroids = true;
     UNLOCK(mtx_flag_cluster_centroids);
+
+	//std::cout<<"CLUSTER: "<<isReady_obj_label<<" "<<isReady_cluster_centroids<<std::endl;
 
     /* Publish fusion result if both of topics are ready */
     if (isReady_obj_label && isReady_cluster_centroids) {

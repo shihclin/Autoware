@@ -427,7 +427,12 @@ static void obj_pos_xyzCallback(const cv_tracker::image_obj_tracked& fused_objec
     UNLOCK(mtx_flag_obj_pos_xyz);
 
     if (isReady_obj_pos_xyz && isReady_ndt_pose) {
+ 
       locatePublisher();
+
+      proj_end = std::chrono::system_clock::now();
+      proj_time = std::chrono::duration_cast<std::chrono::microseconds>(proj_end - proj_start).count();
+      std::cout << "Object pos projecting time: " << proj_time << " us." << std::endl;
 
       LOCK(mtx_flag_obj_pos_xyz);
       isReady_obj_pos_xyz = false;
@@ -439,9 +444,6 @@ static void obj_pos_xyzCallback(const cv_tracker::image_obj_tracked& fused_objec
     }
     //  }
 
-    proj_end = std::chrono::system_clock::now();
-    proj_time = std::chrono::duration_cast<std::chrono::microseconds>(proj_end - proj_start).count();
-    std::cout << "Object projecting time: " << proj_time << " us." << std::endl;
 
 }
 
@@ -454,7 +456,7 @@ static void position_getter_gnss(const geometry_msgs::PoseStamped &pose){
   gnss_loc.Z = pose.pose.position.z;
 
   GetRPY(pose.pose,gnss_angle.thiX,gnss_angle.thiY,gnss_angle.thiZ);
-  printf("quaternion angle : %f\n",gnss_angle.thiZ*180/M_PI);
+  //printf("quaternion angle : %f\n",gnss_angle.thiZ*180/M_PI);
 
   gnssGetFlag = true;
   //printf("my position : %f %f %f\n",my_loc.X,my_loc.Y,my_loc.Z);
@@ -462,6 +464,10 @@ static void position_getter_gnss(const geometry_msgs::PoseStamped &pose){
 #endif
 
 static void position_getter_ndt(const geometry_msgs::PoseStamped &pose){
+
+
+  proj_start = std::chrono::system_clock::now();
+
   //In Autoware axel x and axel y is opposite
   //but once they is converted to calculate.
   current_pose_time = pose.header.stamp;
@@ -470,8 +476,8 @@ static void position_getter_ndt(const geometry_msgs::PoseStamped &pose){
   ndt_loc.Z = pose.pose.position.z;
 
   GetRPY(pose.pose,ndt_angle.thiX,ndt_angle.thiY,ndt_angle.thiZ);
-  printf("quaternion angle : %f\n",ndt_angle.thiZ*180/M_PI);
-  printf("location : %f %f %f\n",ndt_loc.X,ndt_loc.Y,ndt_loc.Z);
+  //printf("quaternion angle : %f\n",ndt_angle.thiZ*180/M_PI);
+  //printf("location : %f %f %f\n",ndt_loc.X,ndt_loc.Y,ndt_loc.Z);
 
   ndtGetFlag = true;
 
@@ -482,6 +488,10 @@ static void position_getter_ndt(const geometry_msgs::PoseStamped &pose){
 
     if (isReady_obj_pos_xyz && isReady_ndt_pose) {
       locatePublisher();
+
+      proj_end = std::chrono::system_clock::now();
+      proj_time = std::chrono::duration_cast<std::chrono::microseconds>(proj_end - proj_start).count();
+      std::cout << "Object ndt projecting time: " << proj_time << " us." << std::endl;
 
       LOCK(mtx_flag_obj_pos_xyz);
       isReady_obj_pos_xyz = false;

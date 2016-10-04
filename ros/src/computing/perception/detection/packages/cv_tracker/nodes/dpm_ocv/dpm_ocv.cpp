@@ -147,7 +147,6 @@ objectDetect::~objectDetect()
 
 void objectDetect::run()
 {
-	//std::cout<<"Test in dpm_ocv"<<std::endl;
 	std::string config_topic("/config");
 	config_topic += ros::this_node::getNamespace() + "/dpm";
 	config_sub_ = nh_.subscribe<runtime_manager::ConfigCarDpm>(config_topic, 1, &objectDetect::configCallback, this);
@@ -202,6 +201,7 @@ void objectDetect::imageCallback(const sensor_msgs::ImageConstPtr& img)
 		rect.score = od.score;
 		msg.obj.push_back(rect);
 	}
+
 
 	tm.stop();
 	exe_time = tm.getTimeMilli();

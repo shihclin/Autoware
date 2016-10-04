@@ -61,7 +61,7 @@ static void DetectedObjectsCallback(const cv_tracker::image_obj& image_object)
 	/*=====*/
 	range_end = std::chrono::system_clock::now();
 	range_time = std::chrono::duration_cast<std::chrono::milliseconds>(range_end - range_start).count();
-	std::cout << "Ranging detect_obj time: " << range_time << " ms." << std::endl;
+	//std::cout << "Ranging detect_obj time: " << range_time << " ms." << std::endl;
         publishTopic();
         ready_ = false;
         return;
@@ -89,7 +89,7 @@ static void PointsImageCallback(const points2image::PointsImage& points_image)
         /*=====*/
         pi_end = std::chrono::system_clock::now();
         pi_time = std::chrono::duration_cast<std::chrono::milliseconds>(pi_end - pi_start).count();
-        std::cout << "Ranging point2image time: " << pi_time << " ms." << std::endl;
+        //std::cout << "Ranging point2image time: " << pi_time << " ms." << std::endl;
 
 	publishTopic();
         ready_ = false;

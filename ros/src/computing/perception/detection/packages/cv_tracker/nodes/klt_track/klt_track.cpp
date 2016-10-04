@@ -187,6 +187,8 @@ class RosTrackerApp
 			publisher_tracked_objects_.publish(ros_objects_msg_);
 			track_ready_ = false;
 			detect_ready_ = false;
+			
+			std::cout << "Tracking Time: " << (track_time + detect_time) << " ms." << std::endl;
 		}
 	}
 
@@ -324,7 +326,7 @@ public:
 		
 
 		track_time = std::chrono::duration_cast<std::chrono::microseconds>(track_end - track_start).count() / 1000.0;
-		std::cout << "Tracking Execution Time: " << track_time << " ms." << std::endl;
+		//std::cout << "Tracking Execution Time: " << track_time << " ms." << std::endl;
 	}
 
 	void detections_callback(cv_tracker::image_obj_ranged image_objects_msg)
@@ -362,7 +364,7 @@ public:
 		
 		
 		detect_time = std::chrono::duration_cast<std::chrono::microseconds>(detect_end - detect_start).count() / 1000.0;
-		std::cout << "Detecting Execution Time: " << detect_time << " ms." << std::endl;
+		//std::cout << "Detecting Execution Time: " << detect_time << " ms." << std::endl;
 	}
 	/*void detections_callback(cv_tracker::image_obj image_objects_msg)
 	{
