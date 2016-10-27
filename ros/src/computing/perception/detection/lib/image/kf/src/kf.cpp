@@ -88,8 +88,8 @@ static std::ofstream ofs_histo;
 static std::string filename;
 static std::chrono::time_point<std::chrono::system_clock> begin, tick;
 static double timestamp;
-static double exe_time = 0.0;
-
+static double detect_time = 0.0;
+static double track_time = 0.0;
 
 struct kstate
 {
@@ -598,6 +598,7 @@ void doTracking(std::vector<cv::LatentSvmDetector::ObjectDetection>& detections,
 	//Convert Bounding box coordinates from (x1,y1,w,h) to (BoxCenterX, BoxCenterY, width, height)
 	objects = detections;//bboxToPosScale(detections);
 
+
 	std::vector<int> already_matched;
 	//compare detections from this frame with tracked objects
 	for (unsigned int j = 0; j < detections.size(); j++)
@@ -739,6 +740,7 @@ void doTracking(std::vector<cv::LatentSvmDetector::ObjectDetection>& detections,
 		}
 	}
 
+
 	//finally add non matched detections as new
 	for (unsigned int i = 0; i < add_as_new_indices.size(); i++)
 	{
@@ -747,6 +749,7 @@ void doTracking(std::vector<cv::LatentSvmDetector::ObjectDetection>& detections,
 			initTracking(objects[i], kstates, detections[i], image, colors, _ranges[i]);
 		}
 	}
+	
 	/*
 	//check overlapping states and remove them
 	float overlap = (OVERLAPPING_PERC/100);
@@ -801,6 +804,7 @@ void publish_if_possible()
 		image_objects.publish(kf_objects_msg_);
 		track_ready_ = false;
 		detect_ready_ = false;
+		std::cout << "Tracking time = " << ( track_time + detect_time ) << " ms." << std::endl;
 	}
 }
 
@@ -816,7 +820,7 @@ void trackAndDrawObjects(cv::Mat& image, int frameNumber, std::vector<cv::Latent
 	doTracking(detections, frameNumber, kstates, active, image, tracked_detections, colors);
 
 	tm.stop();
-	exe_time = tm.getTimeMilli();
+	track_time = tm.getTimeMilli();
 
         /*=====*/
         // Write log
@@ -828,10 +832,10 @@ void trackAndDrawObjects(cv::Mat& image, int frameNumber, std::vector<cv::Latent
 
 	tick = std::chrono::system_clock::now();
         timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;        
-        ofs_times << ", " << timestamp << " " << exe_time;
-        ofs_histo << ", " << exe_time;
+        ofs_times << ", " << timestamp << " " << (detect_time + track_time);
+        ofs_histo << ", " << (detect_time +track_time);
 
-	std::cout << "Tracking time = " << tm.getTimeMilli() << " ms." << std::endl;
+	//std::cout << "Tracking time = " << tm.getTimeMilli() << " ms." << std::endl;
 
 	//ROS
 	int num = tracked_detections.size();
@@ -927,7 +931,8 @@ void detections_callback(cv_tracker::image_obj_ranged image_objects_msg)
 		_ready = true;
 		detect_ready_ = true;
 		tm_de.stop();
-		std::cout << "Detecting time = " << tm_de.getTimeMilli() << " ms." << std::endl;
+		detect_time	= tm_de.getTimeMilli();
+		//std::cout << "Detecting time = " << tm_de.getTimeMilli() << " ms." << std::endl;
 	}
 	//cout << "received pos" << endl;
 

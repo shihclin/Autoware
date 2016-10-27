@@ -18,8 +18,6 @@ OPTION_DET_GEOMETRY='--geometry=50x20+535+500'
 OPTION_MIPL_GEOMETRY='--geometry=50x20+985+500'
 OPTION_MOPL_GEOMETRY='--geometry=50x20+1500+500'
 
-
-
 OPTION_COMMAND='--command'
 
 if [ $(which gnome-terminal) ]; then
@@ -41,7 +39,7 @@ elif [ $(which konsole) ]; then
 fi
 
 echo "Process Manager"
-
+source ./devel/setup.bash;
 #gksudo --message "Please input password for launching process manager" \
 #       -- $MY_PATH/run_proc_manager &
 
