@@ -12,10 +12,11 @@ find_package(OpenCV REQUIRED)
 
 pkg_check_modules(HDF5 hdf5)
 
-###########################################CAFFE NEEDS TO BE PREVIOUSLY COMPILED####################
-##############DONT FORGET TO INSTALL fastrcnn's caffe dynamic libraries to /usr/local/lib	#### 
-set(CAFFE_PATH "$ENV{HOME}/fast-rcnn/caffe-fast-rcnn/distribute")				####
-####################################################################################################
+###########################################CAFFE NEEDS TO BE PREVIOUSLY COMPILED###################
+##############DONT FORGET TO INSTALL fastrcnn's caffe dynamic libraries to /usr/local/lib     #### 
+#set(CAFFE_PATH "$ENV{HOME}/fast-rcnn/caffe-fast-rcnn/distribute")		       	      ####
+#set(CAFFE_PATH "/home/shihclin/Workloads/fast-rcnn/caffe-fast-rcnn/distribute")	      ####
+###################################################################################################
 
 if(EXISTS "${CAFFE_PATH}")
 

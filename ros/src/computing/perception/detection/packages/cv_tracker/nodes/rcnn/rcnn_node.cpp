@@ -116,12 +116,12 @@ class RosRcnnApp
 
 		//Detect Object in image
 		std::vector< RectClassScore<float> > detections;
-		//cv::TickMeter timer; timer.start();
+		cv::TickMeter timer; timer.start();
 		//std::cout << "score:" << score_threshold_ << " slices:" << image_slices_ << " slices overlap:" << slices_overlap_ << "nms" << group_threshold_ << std::endl;
 		detections = rcnn_detector_->Detect(image, detect_classes_, score_threshold_, image_slices_, slices_overlap_, group_threshold_);
 
-		//timer.stop();
-		//std::cout << "Detection took: " << timer.getTimeMilli() << std::endl;
+		timer.stop();
+		std::cout << "RCNN Detection took: " << timer.getTimeMilli() << std::endl;
 
 		//Prepare Output message
 		cv_tracker::image_obj output_car_message;
@@ -242,7 +242,7 @@ public:
 		score_threshold_= 0.6;
 		group_threshold_= 0.8;
 		image_slices_ 	= 16;
-		use_gpu_ 		= false;
+		use_gpu_ 	= true; //false;
 		gpu_device_id_ 	= 0;
 		slices_overlap_ = 0.7;
 	}

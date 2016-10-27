@@ -1,5 +1,7 @@
 #!/bin/bash
 # get where I am
+source devel/setup.bash
+
 MY_PATH=$(readlink -f  $(dirname $0))
 
 # what type of terminal
