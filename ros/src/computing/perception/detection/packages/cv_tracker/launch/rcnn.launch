@@ -2,7 +2,7 @@
 	<arg name="car" default="true"/>
 	<arg name="pedestrian" default="false"/>
 	<arg name="use_gpu" default="true"/>
-	<arg name="gpu_device_id" default="5"/>
+	<arg name="gpu_device_id" default="0"/>
 	
 	<!-- arguments list -->
 	

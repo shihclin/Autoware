@@ -1,6 +1,5 @@
 #!/bin/bash
 # get where I am
-source devel/setup.bash
 
 MY_PATH=$(readlink -f  $(dirname $0))
 
@@ -81,5 +80,7 @@ ${TERMINAL} ${OPTION_MIPL_GEOMETRY} ${OPTION_TITLE}="mipl" --${OPTION_WORKING_DI
 #boot motion planning launch
 ${TERMINAL} ${OPTION_MOPL_GEOMETRY} ${OPTION_TITLE}="mopl" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_motion_planning.launch'"&
 
+#boot raw image terminal
+#${TERMINAL} ${OPTION_IMG_GEOMETRY} ${OPTION_TITLE}="img" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; rosrun image_view image_view image:=/image_raw '" &
 
-${TERMINAL} ${OPTION_IMG_GEOMETRY} ${OPTION_TITLE}="img" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; rosrun image_view image_view image:=/image_raw '" &
+

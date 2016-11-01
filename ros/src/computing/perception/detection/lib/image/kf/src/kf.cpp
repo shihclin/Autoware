@@ -805,6 +805,19 @@ void publish_if_possible()
 		track_ready_ = false;
 		detect_ready_ = false;
 		std::cout << "Tracking time = " << ( track_time + detect_time ) << " ms." << std::endl;
+
+		/*=====*/
+		// Write log
+	        if (!ofs_times || !ofs_histo)
+		{
+		std::cerr << "Could not write logging file." << std::endl;
+		exit(1);
+		}
+
+		tick = std::chrono::system_clock::now();
+		timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;        
+		ofs_times << ", " << timestamp << " " << (detect_time + track_time);
+		ofs_histo << ", " << (detect_time +track_time);
 	}
 }
 
@@ -822,18 +835,6 @@ void trackAndDrawObjects(cv::Mat& image, int frameNumber, std::vector<cv::Latent
 	tm.stop();
 	track_time = tm.getTimeMilli();
 
-        /*=====*/
-        // Write log
-        if (!ofs_times || !ofs_histo)
-        {
-        std::cerr << "Could not write logging file." << std::endl;
-        exit(1);
-        }
-
-	tick = std::chrono::system_clock::now();
-        timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;        
-        ofs_times << ", " << timestamp << " " << (detect_time + track_time);
-        ofs_histo << ", " << (detect_time +track_time);
 
 	//std::cout << "Tracking time = " << tm.getTimeMilli() << " ms." << std::endl;
 
@@ -992,7 +993,7 @@ int kf_main(int argc, char* argv[])
         /*=====*/
         //For graph
         ofs_times.open("kf_track_timeseries.csv", std::ios::app);
-        ofs_times << "Tracking";
+        ofs_times << "KF Tracking";
         ofs_histo.open("kf_track_histogram.csv", std::ios::app);
 	begin = std::chrono::system_clock::now();
 

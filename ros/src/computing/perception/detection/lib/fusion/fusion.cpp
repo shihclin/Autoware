@@ -249,7 +249,6 @@ void fuse()
 	getVScanPoints(vScanPoints);//store all the vscanpoints and its data
 
 	fuseFilterDetections(vScanPoints);//filter and store fused objects
-
 }
 
 #if _DEBUG
@@ -357,6 +356,7 @@ void calcDistance()
 		int search_scope_max_y;
 		int search_scope_min_y;
 
+ 
 		if (g_scan_image.max_y > g_corner_points[1+i*4] + g_corner_points[3+i*4]) {
 			search_scope_max_y = g_corner_points[1+i*4] + g_corner_points[3+i*4];
 		} else {
@@ -369,9 +369,10 @@ void calcDistance()
 			search_scope_min_y = g_scan_image.min_y;
 		}
 
+
 		std::vector<float> distance_candidates;
 		for(int j = g_corner_points[0+i*4]; j < g_corner_points[0+i*4] + g_corner_points[2+i*4]; j++) {
-		    for(int k = search_scope_min_y; k <= search_scope_max_y; k++) {
+		   for(int k = search_scope_min_y; k <= search_scope_max_y; k++) {
 			if(g_scan_image.distance[j][k] != NO_DATA) {
 			    distance_candidates.push_back(g_scan_image.distance[j][k]);
 			}
@@ -380,7 +381,6 @@ void calcDistance()
 
                 /* calculate mode (most common) value in candidates */
                 obstacle_distance = getMode(distance_candidates);
-
 		g_distances.push_back(obstacle_distance); //unit of length is centimeter
 #if _DEBUG //debug
 		if(obstacle_distance != NO_DATA) {

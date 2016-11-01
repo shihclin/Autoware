@@ -15,7 +15,7 @@ def parse_csv(filename):
             raw_data.append(float(item))
     return raw_data
 
-path = "../csv/20160922_FirstTest/"
+path = "../csv/WithopenMP/"
 
 
 filename = path + "ndt_matching_histogram.csv"

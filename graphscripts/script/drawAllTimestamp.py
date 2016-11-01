@@ -66,11 +66,11 @@ def parse_csv(filename):
   return raw_data, legend_labels
 
 # FIXME: Change the file name to plot
-localization = "../csv/20160926_01/angle_set_timeseries.csv"
-detection = "../csv/20160926_02/angle_set_timeseries.csv"
-tracking = "../csv/20160926_03/angle_set_timeseries.csv"
-velocity_set = "../csv/20160926_04/angle_set_timeseries.csv"
-angle_set = "../csv/20160926_05/angle_set_timeseries.csv"
+localization = "../csv/KLT_tracking_test_1/klt_track_timeseries.csv"
+detection = "../csv/KLT_tracking_test_2/klt_track_timeseries.csv"
+tracking = "../csv/KLT_tracking_test_3/klt_track_timeseries.csv"
+#velocity_set = "../csv/20160926_04/angle_set_timeseries.csv"
+#angle_set = "../csv/20160926_05/angle_set_timeseries.csv"
 
 #localization = "ndt_matching_timeseries.csv"
 #detection = "dpm_ocv_detection_timeseries.csv"
@@ -88,18 +88,18 @@ angle_set = "../csv/20160926_05/angle_set_timeseries.csv"
 loc_data, loc_labels = parse_csv(localization)
 det_data, det_labels = parse_csv(detection)
 tra_data, tra_labels = parse_csv(tracking)
-vel_data, vel_labels = parse_csv(velocity_set)
-ang_data, ang_labels = parse_csv(angle_set)
+#vel_data, vel_labels = parse_csv(velocity_set)
+#ang_data, ang_labels = parse_csv(angle_set)
 
 
 #myList[:] = [x / myInt for x in myList]
 
 
-loc_data[loc_labels[0]]["y"][:] = [ x / 1000.0 for x in loc_data[loc_labels[0]]["y"]]
-det_data[det_labels[0]]["y"][:] = [ x / 1000.0 for x in det_data[det_labels[0]]["y"]]
-tra_data[tra_labels[0]]["y"][:] = [ x / 1000.0 for x in tra_data[tra_labels[0]]["y"]]
-vel_data[vel_labels[0]]["y"][:] = [ x / 1000.0 for x in vel_data[vel_labels[0]]["y"]]
-ang_data[ang_labels[0]]["y"][:] = [ x / 1000.0 for x in ang_data[ang_labels[0]]["y"]]
+#loc_data[loc_labels[0]]["y"][:] = [ x / 1000.0 for x in loc_data[loc_labels[0]]["y"]]
+#det_data[det_labels[0]]["y"][:] = [ x / 1000.0 for x in det_data[det_labels[0]]["y"]]
+#tra_data[tra_labels[0]]["y"][:] = [ x / 1000.0 for x in tra_data[tra_labels[0]]["y"]]
+#vel_data[vel_labels[0]]["y"][:] = [ x / 1000.0 for x in vel_data[vel_labels[0]]["y"]]
+#ang_data[ang_labels[0]]["y"][:] = [ x / 1000.0 for x in ang_data[ang_labels[0]]["y"]]
 
 
 ax = plt.subplot(1, 1, 1)
@@ -108,7 +108,7 @@ ax = plt.subplot(1, 1, 1)
 
 # configs
 #color_list = color_maker(NUM_LINES, map="brg")
-color_list = color_maker(5, map="jet")
+color_list = color_maker(3, map="jet")
 
 
 #for j in 5:
@@ -122,30 +122,31 @@ ax.plot(det_data[det_labels[0]]["x"], det_data[det_labels[0]]["y"], "-",
         color=color_list[1], label=det_labels[0], lw=1)
 ax.plot(tra_data[tra_labels[0]]["x"], tra_data[tra_labels[0]]["y"], "-",
         color=color_list[2], label=tra_labels[0], lw=1)
-ax.plot(vel_data[vel_labels[0]]["x"], vel_data[vel_labels[0]]["y"], "-",
-        color=color_list[3], label=vel_labels[0], lw=1)
-ax.plot(ang_data[ang_labels[0]]["x"], ang_data[ang_labels[0]]["y"], "-",
-        color=color_list[4], label=ang_labels[0], lw=1)
+#ax.plot(vel_data[vel_labels[0]]["x"], vel_data[vel_labels[0]]["y"], "-",
+#        color=color_list[3], label=vel_labels[0], lw=1)
+#ax.plot(ang_data[ang_labels[0]]["x"], ang_data[ang_labels[0]]["y"], "-",
+#        color=color_list[4], label=ang_labels[0], lw=1)
 
 
 #ax.axhline(y=490, color='red', linestyle='--', lw=1)
 # x-axis and y-axis labels
 ax.set_xlabel("Time (s)")
 ax.set_ylabel("Latency (ms)")
-ax.set_ylim([0, 0.2])
+ax.set_ylim([0, 600])
+#ax.set_xlim([0, 150])
 #ax.set_yticks(np.arange(0, 1))
 
 # legend
-#ax.legend(loc="center right")
+ax.legend(loc="upper right")
 #ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), fancybox=True, ncol=5)
 
 # title
-ax.set_title("Reliability Test- Angle Setting")
+ax.set_title("KLT tracking")
 
 # grid
 ax.yaxis.grid()
 
-out_filename = "Relia-ang" + ".png"
+out_filename = "KLT_tracking" + ".png"
 
 plt.savefig(out_filename)
 #plt.show()

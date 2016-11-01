@@ -55,6 +55,7 @@
 #include <stdio.h>
 
 #include <string>
+#include <fstream>
 #include <sstream>
 #include <algorithm>
 #include <iterator>
@@ -63,8 +64,16 @@
 #include <chrono>
 
 
-static double track_time = 0;
-static double detect_time = 0;
+static std::ofstream ofs_times;
+static std::ofstream ofs_histo;
+static std::string filename;
+static std::chrono::time_point<std::chrono::system_clock> begin, tick;
+static double timestamp;
+
+
+static double klt_time = 0.0;
+static double track_time = 0.0;
+static double detect_time = 0.0;
 static std::chrono::time_point<std::chrono::system_clock> track_start, track_end;
 static std::chrono::time_point<std::chrono::system_clock> detect_start, detect_end;
 
@@ -187,8 +196,23 @@ class RosTrackerApp
 			publisher_tracked_objects_.publish(ros_objects_msg_);
 			track_ready_ = false;
 			detect_ready_ = false;
+
+			klt_time  = (track_time + detect_time);
+			std::cout << "Tracking Time: " << klt_time << " ms." << std::endl;
 			
-			std::cout << "Tracking Time: " << (track_time + detect_time) << " ms." << std::endl;
+			/*=====*/
+			// Write log
+			if (!ofs_times || !ofs_histo)
+			{
+			std::cerr << "Could not write logging file." << std::endl;
+			exit(1);
+			}
+ 
+			tick = std::chrono::system_clock::now();
+			timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
+			ofs_times << ", " << timestamp << " " << (detect_time + track_time);   
+			ofs_histo << ", " << (detect_time +track_time);
+
 		}
 	}
 
@@ -401,6 +425,17 @@ public:
 		std::string image_obj_topic_str;
 
 		ros::NodeHandle private_node_handle("~");//to receive args
+
+		 ROS_INFO("Enter klt_track");
+		/*=====*/
+		//For graph  
+		ofs_times.open("klt_track_timeseries.csv", std::ios::app);
+		ofs_times << "KLT Tracking";
+		ofs_histo.open("klt_track_histogram.csv", std::ios::app);
+		begin = std::chrono::system_clock::now();
+
+
+
 
 		if (private_node_handle.getParam("image_raw_node", image_raw_topic_str))
 			{

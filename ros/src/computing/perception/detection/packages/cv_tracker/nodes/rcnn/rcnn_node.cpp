@@ -111,7 +111,8 @@ class RosRcnnApp
 	void image_callback(const sensor_msgs::Image& image_source)
 	{
 		//Receive Image, convert it to OpenCV Mat
-		cv_bridge::CvImagePtr cv_image = cv_bridge::toCvCopy(image_source, "bgr8");//toCvCopy(image_source, sensor_msgs::image_encodings::BGR8);
+		cv_bridge::CvImagePtr cv_image = cv_bridge::toCvCopy(image_source, sensor_msgs::image_encodings::BGR8);
+		//cv_bridge::CvImagePtr cv_image = cv_bridge::toCvCopy(image_source, "bgr8");//toCvCopy(image_source, sensor_msgs::image_encodings::BGR8);
 		cv::Mat image = cv_image->image;
 
 		//Detect Object in image
@@ -121,7 +122,7 @@ class RosRcnnApp
 		detections = rcnn_detector_->Detect(image, detect_classes_, score_threshold_, image_slices_, slices_overlap_, group_threshold_);
 
 		timer.stop();
-		std::cout << "RCNN Detection took: " << timer.getTimeMilli() << std::endl;
+		std::cout << "RCNN Detection time: " << timer.getTimeMilli() << " ms." <<std::endl;
 
 		//Prepare Output message
 		cv_tracker::image_obj output_car_message;
@@ -195,12 +196,12 @@ public:
 
 		if (private_node_handle.getParam("use_gpu", use_gpu_))
 		{
-			ROS_INFO("GPU Mode: %d", use_gpu_);
+			ROS_INFO("RCNN GPU Mode: %d", use_gpu_);
 		}
 		int gpu_id;
 		if (private_node_handle.getParam("gpu_device_id", gpu_id ))
 		{
-			ROS_INFO("GPU Device ID: %d", gpu_id);
+			ROS_INFO("RCNN GPU Device ID: %d", gpu_id);
 			gpu_device_id_ = (unsigned int) gpu_id;
 		}
 
