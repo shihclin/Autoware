@@ -228,7 +228,7 @@ public:
 
 		std::vector<bool> tracker_matched(obj_trackers_.size(), false);
 		std::vector<bool> object_matched(obj_detections_.size(), false);
-
+		
 		//check object detections vs current trackers
 		for (i =0; i< obj_detections_.size(); i++)
 		{
@@ -366,6 +366,7 @@ public:
 			//points are X,Y,W,H and repeat for each instance
 			obj_detections_.clear();
             		ranges_.clear();
+			std::cout<<"Detected Object Number: "<<num<<std::endl;
             
 			for (unsigned int i=0; i<num;i++)
 			{

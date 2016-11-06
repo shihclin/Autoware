@@ -15,9 +15,9 @@ def parse_csv(filename):
             raw_data.append(float(item))
     return raw_data
 
-path = "../csv/20160926_01/"
+path = "../csv/gpu/"
 
-
+'''
 filename = path + "ndt_matching_histogram.csv"
 loc_data    = parse_csv(filename)
 tmp_0   = np.mean(loc_data)
@@ -32,14 +32,14 @@ tmp_1   = np.mean(det_data)
 me_1    = np.median(det_data)
 det_95  = np.percentile(det_data,95)
 det_99  = np.percentile(det_data,99)
-
+'''
 filename = path + "kf_track_histogram.csv"
 tra_data    = parse_csv(filename)
 tmp_2   = np.mean(tra_data)
 me_2    = np.median(tra_data)
 tra_95  = np.percentile(tra_data,95)
 tra_99  = np.percentile(tra_data,99)
-
+'''
 filename = path + "velocity_set_histogram.csv"
 vel_data    = parse_csv(filename)
 tmp_3   = np.mean(vel_data)
@@ -60,8 +60,10 @@ final   = tmp_0 + tmp_1 + tmp_2 + (tmp_3/1000) + (tmp_4/1000)
 median_final = me_0 + me_1 + me_2 + (me_3/1000) + (me_4/1000)
 final_95    = loc_95 + det_95 + tra_95 + (vel_95/1000) + (ang_95/1000)
 final_99    = loc_99 + det_99 + tra_99 + (vel_99/1000) + (ang_99/1000)
+'''
 
-
+print tmp_2, me_2, tra_95, tra_99
+'''
 print "Mean"
 
 print "Localization: ", '{:.2f}'.format(tmp_0), "ms"
@@ -98,5 +100,5 @@ print "Tracking: ", '{:.2f}'.format(np.percentile(tra_data,99)), "ms"
 print "Velocity Setting: ", '{:.2f}'.format(np.percentile(vel_data,99)), "us"
 print "Angle Setting: ", '{:.2f}'.format(np.percentile(ang_data,99)), "us"
 print "End-to-end 99% latency: ", '{:.2f}'.format(final_99), "ms", "\n" 
-
+'''
 

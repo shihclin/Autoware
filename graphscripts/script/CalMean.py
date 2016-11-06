@@ -15,14 +15,15 @@ def parse_csv(filename):
             raw_data.append(float(item))
     return raw_data
 
-path = "../csv/WithopenMP/"
+path = "../csv/KLT_tracking_test_1/"
 
 
-filename = path + "ndt_matching_histogram.csv"
+filename = path + "klt_track_histogram.csv"
 data    = parse_csv(filename)
 tmp_0   = np.mean(data)
-print "Localization: ", '{:.2f}'.format(np.mean(data)), "ms"
+print "Tracking: ", '{:.2f}'.format(np.mean(data)), "ms"
 
+'''
 filename = path + "dpm_ocv_detection_histogram.csv"
 data    = parse_csv(filename)
 tmp_1   = np.mean(data)
@@ -45,4 +46,4 @@ print "Angle Setting: ", '{:.2f}'.format(np.mean(data)), "us"
 
 final   = tmp_0 + tmp_1 + tmp_2 + (tmp_3/1000) + (tmp_4/1000)
 print "End-to-end latency: ", '{:.2f}'.format(final), "ms"
-
+'''

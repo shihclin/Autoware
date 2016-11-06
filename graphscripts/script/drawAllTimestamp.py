@@ -67,8 +67,8 @@ def parse_csv(filename):
 
 # FIXME: Change the file name to plot
 localization = "../csv/KLT_tracking_test_1/klt_track_timeseries.csv"
-detection = "../csv/KLT_tracking_test_2/klt_track_timeseries.csv"
-tracking = "../csv/KLT_tracking_test_3/klt_track_timeseries.csv"
+detection = "../csv/Loc_MT/WOopenMP_AllRun_2/kf_track_timeseries.csv"
+#tracking = "../csv/KLT_tracking_test_3/klt_track_timeseries.csv"
 #velocity_set = "../csv/20160926_04/angle_set_timeseries.csv"
 #angle_set = "../csv/20160926_05/angle_set_timeseries.csv"
 
@@ -87,7 +87,7 @@ tracking = "../csv/KLT_tracking_test_3/klt_track_timeseries.csv"
 #data, legend_labels = parse_csv(filename)
 loc_data, loc_labels = parse_csv(localization)
 det_data, det_labels = parse_csv(detection)
-tra_data, tra_labels = parse_csv(tracking)
+#tra_data, tra_labels = parse_csv(tracking)
 #vel_data, vel_labels = parse_csv(velocity_set)
 #ang_data, ang_labels = parse_csv(angle_set)
 
@@ -108,7 +108,7 @@ ax = plt.subplot(1, 1, 1)
 
 # configs
 #color_list = color_maker(NUM_LINES, map="brg")
-color_list = color_maker(3, map="jet")
+color_list = color_maker(3, map="afmhot")
 
 
 #for j in 5:
@@ -120,8 +120,8 @@ ax.plot(loc_data[loc_labels[0]]["x"], loc_data[loc_labels[0]]["y"], "-",
         color=color_list[0], label=loc_labels[0], lw=1)
 ax.plot(det_data[det_labels[0]]["x"], det_data[det_labels[0]]["y"], "-",
         color=color_list[1], label=det_labels[0], lw=1)
-ax.plot(tra_data[tra_labels[0]]["x"], tra_data[tra_labels[0]]["y"], "-",
-        color=color_list[2], label=tra_labels[0], lw=1)
+#ax.plot(tra_data[tra_labels[0]]["x"], tra_data[tra_labels[0]]["y"], "-",
+#        color=color_list[2], label=tra_labels[0], lw=1)
 #ax.plot(vel_data[vel_labels[0]]["x"], vel_data[vel_labels[0]]["y"], "-",
 #        color=color_list[3], label=vel_labels[0], lw=1)
 #ax.plot(ang_data[ang_labels[0]]["x"], ang_data[ang_labels[0]]["y"], "-",
@@ -132,7 +132,7 @@ ax.plot(tra_data[tra_labels[0]]["x"], tra_data[tra_labels[0]]["y"], "-",
 # x-axis and y-axis labels
 ax.set_xlabel("Time (s)")
 ax.set_ylabel("Latency (ms)")
-ax.set_ylim([0, 600])
+#ax.set_ylim([0, 600])
 #ax.set_xlim([0, 150])
 #ax.set_yticks(np.arange(0, 1))
 
@@ -141,12 +141,12 @@ ax.legend(loc="upper right")
 #ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), fancybox=True, ncol=5)
 
 # title
-ax.set_title("KLT tracking")
+#ax.set_title("Tracking")
 
 # grid
 ax.yaxis.grid()
 
-out_filename = "KLT_tracking" + ".png"
+out_filename = "Track_TimeSeries" + ".png"
 
 plt.savefig(out_filename)
 #plt.show()

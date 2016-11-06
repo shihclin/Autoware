@@ -35,6 +35,7 @@
 #include "fusion_func.h"
 #include "search_distance.h"
 
+static int ImageWidth	= 800;
 #if _DEBUG //debug
 static const char *window_name = "CAR_TRACK";
 //for imageCallback
@@ -70,6 +71,8 @@ float Max_low_height = -1.0;
 float Max_height = 2.0;
 int Min_points = 2;
 float Dispersion = 1.0;
+
+
 
 //checks if a float is close to zero
 static inline bool isAlmostZero(float x)
@@ -272,12 +275,14 @@ void setDetectedObjects(const cv_tracker::image_obj& detected_objects)
 	g_scores.resize(detected_objects.obj.size());
 
 	g_objects_num = detected_objects.obj.size();
+	//std::cout << "Detected Object Number: " << g_objects_num << std::endl;
 	for (int i = 0 ;i < g_objects_num; i++) {
 		g_corner_points[0+i*4] = detected_objects.obj.at(i).x;
 		g_corner_points[1+i*4] = detected_objects.obj.at(i).y;
 		g_corner_points[2+i*4] = detected_objects.obj.at(i).width;
 		g_corner_points[3+i*4] = detected_objects.obj.at(i).height;
 		g_scores[i]            = detected_objects.obj.at(i).score;
+		//std::cout <<"i: " << i <<", "<< g_corner_points[0+i*4] <<" "<<g_corner_points[1+i*4] <<" "<< g_corner_points[2+i*4] <<" " << g_corner_points[3+i*4]<< " " << g_scores[i] << std::endl;
 	}
 	objectsStored = true;
 }
@@ -351,11 +356,32 @@ void calcDistance()
 {
 	g_distances.clear();
 	for(int i = 0; i < g_objects_num; i++)
-	{
+	{   
+		//std::cout<<"In calcDistance: i = "<<i<<std::endl;
 		float obstacle_distance = NO_DATA;
 		int search_scope_max_y;
 		int search_scope_min_y;
+	    
 
+		// RCNN modification //
+		/*----------------------*/
+		int search_scope_max_x;
+		int search_scope_min_x;
+
+	        if(g_corner_points[0+i*4] > 0) {
+		    search_scope_min_x	= g_corner_points[0+i*4];
+		}
+		else{
+		    search_scope_min_x	= 0;
+		}
+
+	        if(g_corner_points[0+i*4] + g_corner_points[2+i*4] < ImageWidth) {
+		    search_scope_max_x	= g_corner_points[0+i*4] + g_corner_points[2+i*4];
+		}
+		else{
+		    search_scope_max_x	= ImageWidth;
+		}
+		/*----------------------*/
  
 		if (g_scan_image.max_y > g_corner_points[1+i*4] + g_corner_points[3+i*4]) {
 			search_scope_max_y = g_corner_points[1+i*4] + g_corner_points[3+i*4];
@@ -369,16 +395,15 @@ void calcDistance()
 			search_scope_min_y = g_scan_image.min_y;
 		}
 
-
 		std::vector<float> distance_candidates;
-		for(int j = g_corner_points[0+i*4]; j < g_corner_points[0+i*4] + g_corner_points[2+i*4]; j++) {
+		for(int j = search_scope_min_x; j < search_scope_max_x; j++) {
+		//for(int j = g_corner_points[0+i*4]; j < g_corner_points[0+i*4] + g_corner_points[2+i*4]; j++) {
 		   for(int k = search_scope_min_y; k <= search_scope_max_y; k++) {
 			if(g_scan_image.distance[j][k] != NO_DATA) {
 			    distance_candidates.push_back(g_scan_image.distance[j][k]);
 			}
 		    }
 		}
-
                 /* calculate mode (most common) value in candidates */
                 obstacle_distance = getMode(distance_candidates);
 		g_distances.push_back(obstacle_distance); //unit of length is centimeter

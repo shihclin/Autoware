@@ -169,8 +169,18 @@ static Eigen::Matrix4f tf_btol, tf_ltob;
 static std::string _localizer = "velodyne";
 static std::string _offset = "linear";  // linear, zero, quadratic
 
-static std::ofstream ofs;
+//static std::ofstream ofs;
+//static std::string filename;
+
+//Profiling File
+static std::ofstream ofs_times;
+static std::ofstream ofs_histo;
 static std::string filename;
+static std::chrono::time_point<std::chrono::system_clock> begin, tick;
+static double timestamp;
+
+
+
 
 static void param_callback(const runtime_manager::ConfigICP::ConstPtr& input)
 {
@@ -578,11 +588,22 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     icp_stat_pub.publish(icp_stat_msg);
 
     // Write log
+    if (!ofs_times || !ofs_histo)
+    {
+      std::cerr << "Could not open " << filename << "." << std::endl;
+      exit(1);
+    }
+
+
+    // Write log
+/*
     if (!ofs)
     {
       std::cerr << "Could not open " << filename << "." << std::endl;
       exit(1);
     }
+*/
+/*
     ofs << input->header.seq << "," << scan_points_num << ","
             << current_pose.x << "," << current_pose.y << "," << current_pose.z << "," << current_pose.roll << ","
             << current_pose.pitch << "," << current_pose.yaw << "," << predict_pose.x << "," << predict_pose.y << ","
@@ -613,6 +634,12 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     std::cout << "Transformation Matrix: " << std::endl;
     std::cout << t << std::endl;
     std::cout << "-----------------------------------------------------------------" << std::endl;
+*/
+    std::cout << "ICP matching time: " << exe_time << " ms." << std::endl;
+        tick = std::chrono::system_clock::now();
+        timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
+        ofs_times << ", " << timestamp << " " << exe_time;
+        ofs_histo << ", " << exe_time;
 
     // Update offset
     if (_offset == "linear")
@@ -667,12 +694,19 @@ int main(int argc, char** argv)
   ros::NodeHandle private_nh("~");
 
   // Set log file name.
+
   char buffer[80];
   std::time_t now = std::time(NULL);
   std::tm *pnow = std::localtime(&now);
   std::strftime(buffer,80,"%Y%m%d_%H%M%S",pnow);
   filename = "icp_matching_" + std::string(buffer) + ".csv";
-  ofs.open(filename.c_str(), std::ios::app);
+//  ofs.open(filename.c_str(), std::ios::app);
+
+  ofs_times.open("icp_matching_timeseries.csv", std::ios::app);
+  ofs_times << "ICP Localization";
+  ofs_histo.open("icp_matching_histogram.csv", std::ios::app);
+  begin = std::chrono::system_clock::now();
+  
 
   // setting parameters
   private_nh.getParam("use_gnss", _use_gnss);
