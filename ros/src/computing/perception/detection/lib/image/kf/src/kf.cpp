@@ -50,6 +50,7 @@
 #include <opencv2/contrib/contrib.hpp>
 #include <opencv2/video/tracking.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/gpu/gpu.hpp>
 
 #include <iostream>
 #include <stdio.h>
@@ -281,9 +282,22 @@ bool crossCorr(cv::Mat im1, cv::Mat im2)
 	result_rows = larger_im.rows - smaller_im.rows + 1;
 	result.create(result_cols, result_rows, CV_32FC1);
 
+  cv::gpu::GpuMat larger_img_gpu, smaller_img_gpu;
+  larger_img_gpu.upload(larger_im);
+  smaller_img_gpu.upload(smaller_im);
+
+  cv::gpu::GpuMat rst;
+
 	/// Do the Matching and Normalize
-	matchTemplate(larger_im, smaller_im, result, CV_TM_CCORR_NORMED);
+  
+  //CPU
+//  cv::matchTemplate(larger_im, smaller_im, result, CV_TM_CCORR_NORMED);
+//  GPU
+  cv::gpu::matchTemplate(larger_img_gpu, smaller_img_gpu, rst, CV_TM_CCORR_NORMED);
 	//normalize(result, result, 0, 1, NORM_MINMAX, -1, cv::Mat());
+
+  //GPU
+  rst.download(result);
 
 	/// Localizing the best match with minMaxLoc
 	double minVal; double maxVal; cv::Point minLoc; cv::Point maxLoc;
@@ -804,7 +818,7 @@ void publish_if_possible()
 		image_objects.publish(kf_objects_msg_);
 		track_ready_ = false;
 		detect_ready_ = false;
-		std::cout << "Tracking time = " << ( track_time + detect_time ) << " ms." << std::endl;
+		std::cout << "KF tracking time = " << ( track_time + detect_time ) << " ms." << std::endl;
 
 		/*=====*/
 		// Write log
