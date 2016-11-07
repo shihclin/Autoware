@@ -169,7 +169,7 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
       converted_prev_points.convertTo(converted_prev_points, CV_32FC2);
 
       prev_points_gpu.upload(converted_prev_points.t());
-      std::cout << "STUFF " << "rows: " << prev_points_gpu.rows << " cols: " << prev_points_gpu.cols << std::endl;
+      //std::cout << "STUFF " << "rows: " << prev_points_gpu.rows << " cols: " << prev_points_gpu.cols << std::endl;
 //      std::cout << CV_32FC2 << std::endl;
 
       cv::Mat current_points_cpu;
@@ -205,7 +205,8 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
       if(!current_points_cpu.empty())
         current_points_cpu.copyTo(current_points_);
       status_gpu.download(status_cpu);
-      err_gpu->download(err_cpu);
+      if(err_gpu)
+	err_gpu->download(err_cpu);
 
       for (int i = 0; i < status_cpu.rows; ++i) 
         status.insert(status.end(), status_cpu.ptr<uchar>(i), status_cpu.ptr<uchar>(i) + status_cpu.cols);
