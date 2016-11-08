@@ -66,7 +66,7 @@ def parse_csv(filename):
   return raw_data, legend_labels
 
 # FIXME: Change the file name to plot
-filename = "angle_set_timeseries.csv"
+filename = "../csv/tmp/" + "kf_track_timeseries.csv"
 
 
 if filename == "line_graph.csv":
@@ -106,7 +106,7 @@ ax.set_title("Timestamp")
 # grid
 ax.yaxis.grid()
 
-out_filename = filename[:-3] + ".png"
+#out_filename = filename[:-3] + ".png"
 
-plt.savefig(out_filename)
-#plt.show()
+#plt.savefig(out_filename)
+plt.show()

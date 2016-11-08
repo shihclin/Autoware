@@ -61,6 +61,9 @@
 #include <iterator>
 #include <chrono>
 
+//#define _TIMEPROCESS
+#define USE_GPU_
+#define gpu_id 1
 
 #define SSTR( x ) dynamic_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
@@ -249,7 +252,7 @@ bool orbMatch(cv::Mat& inImageScene, cv::Mat& inImageObj, cv::Rect& outBoundingB
 bool crossCorr(cv::Mat im1, cv::Mat im2)
 {
 	//im1 roi from the previous frame
-	//im2 roi fromcurrent frame
+	//im2 roi from current frame
 	if (im1.rows <= 0 || im1.cols <= 0 || im2.rows <= 0 || im2.cols <= 0)
 		return false;
 
@@ -258,6 +261,7 @@ bool crossCorr(cv::Mat im1, cv::Mat im2)
 	/// Create the result matrix
 	int result_cols;
 	int result_rows;
+
 
 	//select largest image
 	if (im2.cols > im1.cols)
@@ -282,29 +286,66 @@ bool crossCorr(cv::Mat im1, cv::Mat im2)
 	result_rows = larger_im.rows - smaller_im.rows + 1;
 	result.create(result_cols, result_rows, CV_32FC1);
 
-  cv::gpu::GpuMat larger_img_gpu, smaller_img_gpu;
-  larger_img_gpu.upload(larger_im);
-  smaller_img_gpu.upload(smaller_im);
+#ifdef _TIMEPROCESS
+        cv::TickMeter timer;
+        timer.start();
+#endif
 
-  cv::gpu::GpuMat rst;
 
-	/// Do the Matching and Normalize
-  
-  //CPU
-//  cv::matchTemplate(larger_im, smaller_im, result, CV_TM_CCORR_NORMED);
-//  GPU
-  cv::gpu::matchTemplate(larger_img_gpu, smaller_img_gpu, rst, CV_TM_CCORR_NORMED);
-	//normalize(result, result, 0, 1, NORM_MINMAX, -1, cv::Mat());
+#ifdef USE_GPU_
+	cv::gpu::GpuMat smaller_img_gpu(smaller_im);
+	cv::gpu::GpuMat larger_img_gpu(larger_im);
+	cv::gpu::GpuMat d_rst(result);
+	//cv::gpu::GpuMat larger_img_gpu, smaller_img_gpu, d_rst;
+	//larger_img_gpu.upload(larger_im);
+	//smaller_img_gpu.upload(smaller_im);
+	//d_rst.upload(result);
+#endif
 
-  //GPU
-  rst.download(result);
+#ifdef _TIMEPROCESS
+        timer.stop();
+        float t_upload = timer.getTimeMilli();
+        timer.reset();
+        timer.start();
+#endif
 
+	// Do the Matching and Normalize
+#ifdef USE_GPU_
+	//GPU
+	cv::gpu::matchTemplate(larger_img_gpu, smaller_img_gpu, d_rst, CV_TM_CCORR_NORMED);
+#else
+	//CPU
+	cv::matchTemplate(larger_im, smaller_im, result, CV_TM_CCORR_NORMED);
+#endif
+ 
+
+#ifdef _TIMEPROCESS
+        timer.stop();
+        float t_match = timer.getTimeMilli();
+        timer.reset();
+        timer.start();
+#endif
+
+#ifdef USE_GPU_
+	//GPU
+	//d_rst.download(result);
+#endif
+
+#ifdef _TIMEPROCESS
+        timer.stop();
+        float t_download = timer.getTimeMilli();
+        timer.reset();
+        timer.start();
+#endif
 	/// Localizing the best match with minMaxLoc
 	double minVal; double maxVal; cv::Point minLoc; cv::Point maxLoc;
 	cv::Point matchLoc;
 
+#ifdef USE_GPU_
+	cv::gpu::minMaxLoc(d_rst, &minVal, &maxVal, &minLoc, &maxLoc);
+#else
 	minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
-
+#endif
 	matchLoc = maxLoc;
 
 	/// Show me what you got
@@ -329,6 +370,12 @@ bool crossCorr(cv::Mat im1, cv::Mat im2)
 	}
 	//cv::imshow("match1", scene);
 	//cv::imshow("match2", smaller_im);
+
+#ifdef _TIMEPROCESS
+        timer.stop();
+        float t_post = timer.getTimeMilli();
+	std::cout << "Upload: " << t_upload << ",Match: "<<  t_match << ",Download: " << t_download << ",Post: " << t_post << std::endl;
+#endif
 
 	return ret;
 }
@@ -612,6 +659,10 @@ void doTracking(std::vector<cv::LatentSvmDetector::ObjectDetection>& detections,
 	//Convert Bounding box coordinates from (x1,y1,w,h) to (BoxCenterX, BoxCenterY, width, height)
 	objects = detections;//bboxToPosScale(detections);
 
+#ifdef _TIMEPROCESS
+        cv::TickMeter timer;
+        timer.start();
+#endif
 
 	std::vector<int> already_matched;
 	//compare detections from this frame with tracked objects
@@ -667,7 +718,12 @@ void doTracking(std::vector<cv::LatentSvmDetector::ObjectDetection>& detections,
 		}//for (int i = 0; i < kstates.size(); i++)
 	}//for (int j = 0; j < detections.size(); j++)
 
-
+#ifdef _TIMEPROCESS
+        timer.stop();
+        float t_match = timer.getTimeMilli();
+        timer.reset();
+        timer.start();
+#endif
 	//do prediction and correction for the marked states
 	for (unsigned int i = 0; i < kstates.size(); i++)
 	{
@@ -754,6 +810,13 @@ void doTracking(std::vector<cv::LatentSvmDetector::ObjectDetection>& detections,
 		}
 	}
 
+#ifdef _TIMEPROCESS
+        timer.stop();
+        float t_predict = timer.getTimeMilli();
+        timer.reset(); 
+	timer.start();
+#endif
+
 
 	//finally add non matched detections as new
 	for (unsigned int i = 0; i < add_as_new_indices.size(); i++)
@@ -763,7 +826,13 @@ void doTracking(std::vector<cv::LatentSvmDetector::ObjectDetection>& detections,
 			initTracking(objects[i], kstates, detections[i], image, colors, _ranges[i]);
 		}
 	}
-	
+
+#ifdef _TIMEPROCESS
+        timer.stop();
+        float t_initTrack = timer.getTimeMilli();
+        timer.reset(); 
+	timer.start();
+#endif
 	/*
 	//check overlapping states and remove them
 	float overlap = (OVERLAPPING_PERC/100);
@@ -806,6 +875,12 @@ void doTracking(std::vector<cv::LatentSvmDetector::ObjectDetection>& detections,
 	//return to x,y,w,h
 	posScaleToBbox(kstates, trackedDetections);
 
+#ifdef _TIMEPROCESS
+        timer.stop();
+        float t_post = timer.getTimeMilli();
+	std::cout << "Match: " << t_match << ",Predict: "<<  t_predict << ",InitTrack: " << t_initTrack << ",Post: " << t_post << std::endl;
+#endif
+
 	/*=====*/
 	track_ready_ = true;
 
@@ -819,6 +894,7 @@ void publish_if_possible()
 		track_ready_ = false;
 		detect_ready_ = false;
 		std::cout << "KF tracking time = " << ( track_time + detect_time ) << " ms." << std::endl;
+		//std::cout << "KF tracking time = " << track_time << " " << detect_time << " " << ( track_time + detect_time ) << " ms." << std::endl;
 
 		/*=====*/
 		// Write log
@@ -931,6 +1007,8 @@ void detections_callback(cv_tracker::image_obj_ranged image_objects_msg)
 		_min_heights.clear();
 		_max_heights.clear();
 
+		std::cout<<"Detected Object Number: "<<num<<std::endl;
+
 		for (unsigned int i=0; i<num;i++)
 		{
 			cv::Rect tmp;
@@ -980,7 +1058,7 @@ void init_params()
 {
 	DEFAULT_LIFESPAN	= 8;
 	INITIAL_LIFESPAN	= 4;
-	NOISE_COV			= 1;
+	NOISE_COV		= 1;
 	MEAS_NOISE_COV		= 25;
 	ERROR_ESTIMATE_COV	= 1000000;
 	OVERLAPPING_PERC	= 80.0;
@@ -989,7 +1067,7 @@ void init_params()
 	ORB_NUM_FEATURES	= 2000;
 	ORB_MIN_MATCHES		= 3;
 	ORB_KNN_RATIO		= 0.7;
-	USE_ORB				= false;
+	USE_ORB			= false;
 }
 
 int kf_main(int argc, char* argv[])
@@ -1002,7 +1080,13 @@ int kf_main(int argc, char* argv[])
 
 	cv::generateColors(_colors, 25);
 
-	ROS_INFO("Enter kf_track");
+#ifdef USE_GPU_
+	//cv::gpu::printCudaDeviceInfo(gpu::getDevice(1));
+	cv::gpu::setDevice(1);
+	ROS_INFO("Enter kf_track GPU version");
+#else
+	ROS_INFO("Enter kf_track CPU version");
+#endif
 
         /*=====*/
         //For graph
