@@ -1,6 +1,6 @@
 #include "LkTracker.hpp"
 
-//#define USE_GPU_
+#define USE_GPU_
 #define _TIMEPROCESS
 
 LkTracker::LkTracker(int in_id, float in_min_height, float in_max_height, float in_range)
@@ -320,6 +320,13 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
   if (valid_points.size()<=2)
     {
       current_rect_ = cv::LatentSvmDetector::ObjectDetection(cv::Rect(0,0,0,0),0,0);
+
+#ifdef _TIMEPROCESS
+	timer.stop();
+	float t_all_post = timer.getTimeMilli();
+	std::cout << "GFTT: " << t_GFTT << " Setup: " << t_setup << " OpticalFlow: " << t_opticalflow << " Post-Opticalflow: " << t_of_post << " Kmeans: " << t_kmeans << " Post: " << t_all_post << " Total: " << t_GFTT + t_setup + t_opticalflow + t_of_post + t_kmeans + t_all_post << std::endl;
+#endif
+
       return in_image;
     }
   frame_count_++;
@@ -404,6 +411,13 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
       prev_points_.clear();
       current_points_.clear();
       current_rect_ = cv::LatentSvmDetector::ObjectDetection(cv::Rect(0,0,0,0),0,0);
+
+#ifdef _TIMEPROCESS
+	timer.stop();
+	float t_all_post = timer.getTimeMilli();
+	std::cout << "GFTT: " << t_GFTT << " Setup: " << t_setup << " OpticalFlow: " << t_opticalflow << " Post-Opticalflow: " << t_of_post << " Kmeans: " << t_kmeans << " Post: " << t_all_post << " Total: " << t_GFTT + t_setup + t_opticalflow + t_of_post + t_kmeans + t_all_post << std::endl;
+#endif
+
       return in_image;
     }
 
@@ -433,6 +447,12 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
       previous_centroid_x_ = current_centroid_x_;
       previous_centroid_y_ = current_centroid_y_;
     }
+
+#ifdef USE_GPU_
+    std::cout<<"GPU: ";
+#else
+    std::cout<<"CPU: ";
+#endif
 
 #ifdef _TIMEPROCESS
 	timer.stop();
