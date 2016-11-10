@@ -95,11 +95,6 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
   cv::cvtColor(in_image, gray_image, cv::COLOR_BGR2GRAY);
   cv::Mat mask(gray_image.size(), CV_8UC1);
 
-#ifdef _TIMEPROCESS
-    cv::TickMeter timer;
-    float t_setup, t_opticalflow, t_kmeans;
-    timer.start();
-#endif
 
   if (in_update && in_detection.rect.width > 0)
     {
@@ -115,29 +110,62 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
 
       lifespan_ = DEFAULT_LIFESPAN_;
     }
+
+
+#ifdef _TIMEPROCESS
+    cv::TickMeter timer;
+    float t_setup   = 0.0; 
+    float t_GFTT    = 0.0;
+    float t_opticalflow	= 0.0; 
+    float t_kmeans	= 0.0;
+    float t_of_post = 0.0;;
+    timer.start();
+#endif
+
+
   int sum_x = 0;
   int sum_y = 0;
   std::vector<cv::Point2f> valid_points;
 
+
   lifespan_--;
   if ( ( in_update || prev_image_.empty() ) &&
-      ( matched_detection_.rect.width>0 && matched_detection_.rect.height >0 )
-  )								//add as new object
+      ( matched_detection_.rect.width>0 && matched_detection_.rect.height >0 ) )//add as new object
     {
-      cv::goodFeaturesToTrack(gray_image,			//input to extract corners
-                              current_points_,			//out array with corners in the image
-                              max_point_count_,			//maximum number of corner points to obtain
-                              0.01,				//quality level
-                              10,				//minimum distance between corner points
-                              mask,				//mask ROI
-                              3,				//block size
-                              true,				//true to use harris corner detector, otherwise use tomasi
-                              0.04);				//harris detector free parameter
+
+#ifdef USE_GPU_
+	cv::gpu::GpuMat mask_gpu(mask);
+	cv::gpu::GpuMat gray_image_gpu(gray_image);
+	cv::gpu::GpuMat current_points_gpu;	
+	cv::Mat current_points_cpu;
+
+	cv::gpu::GoodFeaturesToTrackDetector_GPU GFTTDetector_gpu(max_point_count_, 0.01, 10,3,true,0.04);
+	GFTTDetector_gpu(gray_image_gpu, current_points_gpu, mask_gpu);
+
+	current_points_gpu.download(current_points_cpu);
+    
+	if(!current_points_cpu.empty())
+	    current_points_cpu.copyTo(current_points_);
+#else
+
+	cv::goodFeaturesToTrack(gray_image,			//input to extract corners
+				current_points_,			//out array with corners in the image
+				max_point_count_,			//maximum number of corner points to obtain
+				0.01,				//quality level
+				10,				//minimum distance between corner points
+				mask,				//mask ROI
+				3,				//block size
+				true,				//true to use harris corner detector, otherwise use tomasi
+				0.04);				//harris detector free parameter
+#endif
+
       if (current_points_.size()<=0)
         {
           current_rect_ = cv::LatentSvmDetector::ObjectDetection(cv::Rect(0,0,0,0),0,0);
           return in_image;
         }
+
+
       cv::cornerSubPix(gray_image,
                        current_points_,
                        sub_pixel_window_size_,
@@ -156,6 +184,12 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
           valid_points.push_back(current_points_[i]);
         }
       //std::cout << "CENTROID" << current_centroid_x_ <<","<< current_centroid_y_<< std::endl << std::endl;
+#ifdef _TIMEPROCESS
+	timer.stop();
+	t_GFTT = timer.getTimeMilli();
+	timer.reset();
+	timer.start();
+#endif
 
     }
   else if ( !prev_points_.empty() )//try to match current object
@@ -177,7 +211,6 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
       gray_image_gpu.upload(gray_image);
       prev_points_gpu.upload(converted_prev_points.t());
       //std::cout << "STUFF " << "rows: " << prev_points_gpu.rows << " cols: " << prev_points_gpu.cols << std::endl;
-//      std::cout << CV_32FC2 << std::endl;
 #endif
 
       cv::Mat current_points_cpu;
@@ -227,16 +260,12 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
 	timer.start();
 #endif
 
-
-
-
 #ifdef USE_GPU_
       current_points_gpu.download(current_points_cpu);
       status_gpu.download(status_cpu);
       if(err_gpu)
 	err_gpu->download(err_cpu);
 #endif
-
       if(!current_points_cpu.empty())
         current_points_cpu.copyTo(current_points_);
 
@@ -272,7 +301,22 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
           valid_points.push_back(current_points_[i]);
           //cv::circle(in_image, current_points_[i], 3 , cv::Scalar(0,255,0), 2);
         }
+
+#ifdef _TIMEPROCESS
+	timer.stop();
+	t_of_post = timer.getTimeMilli();
+	timer.reset();
+	timer.start();
+#endif
     }
+
+
+#ifdef _TIMEPROCESS
+	timer.stop();
+	timer.reset();
+	timer.start();
+#endif
+
   if (valid_points.size()<=2)
     {
       current_rect_ = cv::LatentSvmDetector::ObjectDetection(cv::Rect(0,0,0,0),0,0);
@@ -392,8 +436,8 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
 
 #ifdef _TIMEPROCESS
 	timer.stop();
-	float t_post = timer.getTimeMilli();
-	std::cout << "Setup: " << t_setup << " ms. " << "OpticalFlow: " << t_opticalflow  << " ms. " << "Kmeans: " << t_kmeans << " ms. " << "Post: " << t_post << " Total: " << t_setup + t_opticalflow + t_kmeans + t_post << std::endl;
+	float t_all_post = timer.getTimeMilli();
+	std::cout << "GFTT: " << t_GFTT << " Setup: " << t_setup << " OpticalFlow: " << t_opticalflow << " Post-Opticalflow: " << t_of_post << " Kmeans: " << t_kmeans << " Post: " << t_all_post << " Total: " << t_GFTT + t_setup + t_opticalflow + t_of_post + t_kmeans + t_all_post << std::endl;
 #endif
 
   return in_image;

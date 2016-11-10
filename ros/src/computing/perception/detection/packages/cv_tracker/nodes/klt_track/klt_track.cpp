@@ -198,7 +198,7 @@ class RosTrackerApp
 			detect_ready_ = false;
 
 			klt_time  = (track_time + detect_time);
-			std::cout << "Tracking Time: " << klt_time << " ms." << std::endl;
+			//std::cout << "Tracking Time: " << klt_time << " ms." << std::endl;
 			
 			/*=====*/
 			// Write log
@@ -208,10 +208,6 @@ class RosTrackerApp
 			exit(1);
 			}
  
-			tick = std::chrono::system_clock::now();
-			timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
-			ofs_times << ", " << timestamp << " " << (detect_time + track_time);   
-			ofs_histo << ", " << (detect_time +track_time);
 
 		}
 	}
@@ -219,7 +215,8 @@ class RosTrackerApp
 public:
 	void image_callback(const sensor_msgs::Image& image_source)
 	{
-		track_start = std::chrono::system_clock::now();
+		cv::TickMeter timer;
+		timer.start();
 
 		cv_bridge::CvImagePtr cv_image = cv_bridge::toCvCopy(image_source, sensor_msgs::image_encodings::BGR8);
 		cv::Mat image_track = cv_image->image;
@@ -344,18 +341,25 @@ public:
 
 		track_ready_ = true;
 		//ready_ = false;
+		timer.stop();
+
+		track_time = timer.getTimeMilli();
+		std::cout << "KLT Tracking Time: " << track_time << " ms." << std::endl;
+
+
+		tick = std::chrono::system_clock::now();
+		timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
+		ofs_times << ", " << timestamp << " " << track_time;   
+		ofs_histo << ", " << track_time;
 
 		publish_if_possible();
-		track_end = std::chrono::system_clock::now();
-		
-
-		track_time = std::chrono::duration_cast<std::chrono::microseconds>(track_end - track_start).count() / 1000.0;
-		//std::cout << "Tracking Execution Time: " << track_time << " ms." << std::endl;
 	}
 
 	void detections_callback(cv_tracker::image_obj_ranged image_objects_msg)
 	{
-		detect_start = std::chrono::system_clock::now();
+		
+		cv::TickMeter timer;
+		timer.start();
 		//if(ready_)
 		//	return;
 		if (!detect_ready_)//must NOT overwrite, data is probably being used by tracking.
@@ -383,12 +387,11 @@ public:
 			detect_ready_ = true;
 		}
 
+		timer.stop();
+		detect_time = timer.getTimeMilli();
+
 		publish_if_possible();
 		//ready_ = true;
-		detect_end = std::chrono::system_clock::now();
-		
-		
-		detect_time = std::chrono::duration_cast<std::chrono::microseconds>(detect_end - detect_start).count() / 1000.0;
 		//std::cout << "Detecting Execution Time: " << detect_time << " ms." << std::endl;
 	}
 	/*void detections_callback(cv_tracker::image_obj image_objects_msg)
