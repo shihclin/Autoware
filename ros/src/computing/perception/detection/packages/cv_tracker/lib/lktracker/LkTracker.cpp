@@ -1,5 +1,7 @@
 #include "LkTracker.hpp"
 
+//#define USE_GPU_
+#define _TIMEPROCESS
 
 LkTracker::LkTracker(int in_id, float in_min_height, float in_max_height, float in_range)
 {
@@ -92,9 +94,12 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
   //cv::cvtColor(in_image, in_image, cv::COLOR_RGB2BGR);
   cv::cvtColor(in_image, gray_image, cv::COLOR_BGR2GRAY);
   cv::Mat mask(gray_image.size(), CV_8UC1);
-  cv::TickMeter timer;
 
-  timer.start();
+#ifdef _TIMEPROCESS
+    cv::TickMeter timer;
+    float t_setup, t_opticalflow, t_kmeans;
+    timer.start();
+#endif
 
   if (in_update && in_detection.rect.width > 0)
     {
@@ -117,15 +122,15 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
   lifespan_--;
   if ( ( in_update || prev_image_.empty() ) &&
       ( matched_detection_.rect.width>0 && matched_detection_.rect.height >0 )
-  )																//add as new object
+  )								//add as new object
     {
       cv::goodFeaturesToTrack(gray_image,			//input to extract corners
-                              current_points_,	//out array with corners in the image
-                              max_point_count_,	//maximum number of corner points to obtain
+                              current_points_,			//out array with corners in the image
+                              max_point_count_,			//maximum number of corner points to obtain
                               0.01,				//quality level
-                              10,					//minimum distance between corner points
-                              mask,//mask ROI
-                              3,					//block size
+                              10,				//minimum distance between corner points
+                              mask,				//mask ROI
+                              3,				//block size
                               true,				//true to use harris corner detector, otherwise use tomasi
                               0.04);				//harris detector free parameter
       if (current_points_.size()<=0)
@@ -160,54 +165,82 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
       if(prev_image_.empty())
         in_image.copyTo(prev_image_);
 
+      cv::Mat converted_prev_points = cv::Mat(prev_points_);
+      converted_prev_points.convertTo(converted_prev_points, CV_32FC2);
+
+
+
+#ifdef USE_GPU_
       //GPU
       cv::gpu::GpuMat prev_image_gpu, gray_image_gpu, prev_points_gpu, current_points_gpu, status_gpu, *err_gpu = NULL;
       prev_image_gpu.upload(prev_image_);
       gray_image_gpu.upload(gray_image);
-
-      cv::Mat converted_prev_points = cv::Mat(prev_points_);
-      converted_prev_points.convertTo(converted_prev_points, CV_32FC2);
-
       prev_points_gpu.upload(converted_prev_points.t());
       //std::cout << "STUFF " << "rows: " << prev_points_gpu.rows << " cols: " << prev_points_gpu.cols << std::endl;
 //      std::cout << CV_32FC2 << std::endl;
+#endif
 
       cv::Mat current_points_cpu;
       cv::Mat status_cpu;
       cv::Mat err_cpu;
 
-      //CPU
-//      cv::calcOpticalFlowPyrLK(prev_image_, 			//previous image frame
-//                               gray_image, 			//current image frame
-//                               prev_points_, 			//previous corner points
-//                               current_points_, 		//current corner points (tracked)
-//                               status,
-//                               err,
-//                               window_size_,
-//                               3,
-//                               term_criteria_,
-//                               0,
-//                               0.001);
+
+#ifdef _TIMEPROCESS
+	timer.stop();
+	t_setup = timer.getTimeMilli();
+	timer.reset();
+	timer.start();
+#endif
+
+
+
+#ifdef USE_GPU_
 
       //GPU
       cv::gpu::PyrLKOpticalFlow optical_flow = cv::gpu::PyrLKOpticalFlow();
 
-      optical_flow.sparse(prev_image_gpu,
-//      cv::gpu::PyrLKOpticalFlow::sparse(prev_image_gpu,
-                                   gray_image_gpu,
-                                   prev_points_gpu,
-                                   current_points_gpu,
-                                   status_gpu,
-                                   err_gpu);
-      std::size_t i = 0, k = 0;
+      optical_flow.sparse(  prev_image_gpu,
+			    gray_image_gpu,
+			    prev_points_gpu,
+                            current_points_gpu,
+                            status_gpu,
+                            err_gpu);
+#else
+      //CPU
+      cv::calcOpticalFlowPyrLK(prev_image_, 			//previous image frame
+                               gray_image, 			//current image frame
+                               prev_points_, 			//previous corner points
+                               current_points_, 		//current corner points (tracked)
+                               status,
+                               err,
+                               window_size_,
+                               3,
+                               term_criteria_,
+                               0,
+                               0.001);
+#endif
 
+#ifdef _TIMEPROCESS
+	timer.stop();
+	t_opticalflow = timer.getTimeMilli();
+	timer.reset();
+	timer.start();
+#endif
+
+
+
+
+#ifdef USE_GPU_
       current_points_gpu.download(current_points_cpu);
-      if(!current_points_cpu.empty())
-        current_points_cpu.copyTo(current_points_);
       status_gpu.download(status_cpu);
       if(err_gpu)
 	err_gpu->download(err_cpu);
+#endif
 
+      if(!current_points_cpu.empty())
+        current_points_cpu.copyTo(current_points_);
+
+      std::size_t i = 0, k = 0;
       for (int i = 0; i < status_cpu.rows; ++i) 
         status.insert(status.end(), status_cpu.ptr<uchar>(i), status_cpu.ptr<uchar>(i) + status_cpu.cols);
 
@@ -276,6 +309,12 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
       colors[1]=colors_[0];
     }
 
+#ifdef _TIMEPROCESS
+	timer.stop();
+	t_kmeans = timer.getTimeMilli();
+	timer.reset();
+	timer.start();
+#endif
   //cv::circle(in_image, center1, 5 , (cv::Scalar)colors[0], 3);
   //cv::circle(in_image, center2, 5 , (cv::Scalar)colors[1], 3);
 
@@ -351,9 +390,11 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
       previous_centroid_y_ = current_centroid_y_;
     }
 
-  timer.stop();
-
-  //std::cout << timer.getTimeMilli() << std::endl;
+#ifdef _TIMEPROCESS
+	timer.stop();
+	float t_post = timer.getTimeMilli();
+	std::cout << "Setup: " << t_setup << " ms. " << "OpticalFlow: " << t_opticalflow  << " ms. " << "Kmeans: " << t_kmeans << " ms. " << "Post: " << t_post << " Total: " << t_setup + t_opticalflow + t_kmeans + t_post << std::endl;
+#endif
 
   return in_image;
 }
