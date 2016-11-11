@@ -62,8 +62,8 @@
 #include <chrono>
 
 //#define _TIMEPROCESS
-#define USE_GPU_
-#define gpu_id 1
+//#define USE_GPU_
+//#define gpu_device_id 1
 
 #define SSTR( x ) dynamic_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
@@ -92,8 +92,11 @@ static std::ofstream ofs_histo;
 static std::string filename;
 static std::chrono::time_point<std::chrono::system_clock> begin, tick;
 static double timestamp;
-static double detect_time = 0.0;
-static double track_time = 0.0;
+static double detect_time	    = 0.0;
+static double track_time	    = 0.0;
+static bool   use_gpu_		    = true;
+static unsigned int gpu_device_id   = 0;
+
 
 struct kstate
 {
@@ -257,6 +260,9 @@ bool crossCorr(cv::Mat im1, cv::Mat im2)
 		return false;
 
 	cv::Mat result, larger_im, smaller_im;
+	cv::gpu::GpuMat smaller_img_gpu;
+	cv::gpu::GpuMat larger_img_gpu;
+	cv::gpu::GpuMat d_rst;
 
 	/// Create the result matrix
 	int result_cols;
@@ -292,15 +298,15 @@ bool crossCorr(cv::Mat im1, cv::Mat im2)
 #endif
 
 
-#ifdef USE_GPU_
-	cv::gpu::GpuMat smaller_img_gpu(smaller_im);
-	cv::gpu::GpuMat larger_img_gpu(larger_im);
-	cv::gpu::GpuMat d_rst(result);
+	if(use_gpu_){
+	    smaller_img_gpu.upload(smaller_im);
+	    larger_img_gpu.upload(larger_im);
+	    d_rst.upload(result);
 	//cv::gpu::GpuMat larger_img_gpu, smaller_img_gpu, d_rst;
 	//larger_img_gpu.upload(larger_im);
 	//smaller_img_gpu.upload(smaller_im);
 	//d_rst.upload(result);
-#endif
+	}
 
 #ifdef _TIMEPROCESS
         timer.stop();
@@ -310,13 +316,14 @@ bool crossCorr(cv::Mat im1, cv::Mat im2)
 #endif
 
 	// Do the Matching and Normalize
-#ifdef USE_GPU_
+	if(use_gpu_){
 	//GPU
-	cv::gpu::matchTemplate(larger_img_gpu, smaller_img_gpu, d_rst, CV_TM_CCORR_NORMED);
-#else
+	    cv::gpu::matchTemplate(larger_img_gpu, smaller_img_gpu, d_rst, CV_TM_CCORR_NORMED);
+	}
+	else{
 	//CPU
-	cv::matchTemplate(larger_im, smaller_im, result, CV_TM_CCORR_NORMED);
-#endif
+	    cv::matchTemplate(larger_im, smaller_im, result, CV_TM_CCORR_NORMED);
+	}
  
 
 #ifdef _TIMEPROCESS
@@ -326,10 +333,10 @@ bool crossCorr(cv::Mat im1, cv::Mat im2)
         timer.start();
 #endif
 
-#ifdef USE_GPU_
+	//#ifdef USE_GPU_
 	//GPU
 	//d_rst.download(result);
-#endif
+	//#endif
 
 #ifdef _TIMEPROCESS
         timer.stop();
@@ -341,11 +348,14 @@ bool crossCorr(cv::Mat im1, cv::Mat im2)
 	double minVal; double maxVal; cv::Point minLoc; cv::Point maxLoc;
 	cv::Point matchLoc;
 
-#ifdef USE_GPU_
-	cv::gpu::minMaxLoc(d_rst, &minVal, &maxVal, &minLoc, &maxLoc);
-#else
-	minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
-#endif
+	if(use_gpu_){
+	    //GPU
+	    cv::gpu::minMaxLoc(d_rst, &minVal, &maxVal, &minLoc, &maxLoc);
+	}
+	else{
+	    //CPU
+	    minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
+	}
 	matchLoc = maxLoc;
 
 	/// Show me what you got
@@ -374,6 +384,12 @@ bool crossCorr(cv::Mat im1, cv::Mat im2)
 #ifdef _TIMEPROCESS
         timer.stop();
         float t_post = timer.getTimeMilli();
+
+	if(use_gpu_)
+	    std::cout << "GPU: ";
+	else
+	    std::cout << "CPU: ";
+
 	std::cout << "Upload: " << t_upload << ",Match: "<<  t_match << ",Download: " << t_download << ",Post: " << t_post << std::endl;
 #endif
 
@@ -1115,6 +1131,25 @@ int kf_main(int argc, char* argv[])
 		ROS_INFO("kf_track: No object node received, defaulting to image_obj_ranged, you can use _object_node:=YOUR_TOPIC");
 		obj_topic = "image_obj_ranged";
 	}
+
+        if (private_nh.getParam("use_gpu", use_gpu_))
+        {
+                ROS_INFO("KF Tracking GPU Mode: %d", use_gpu_);
+        }
+        else
+        {
+		ROS_INFO("KF Tracking CPU Mode");
+        }
+        int gpu_id;
+        if (private_nh.getParam("gpu_device_id", gpu_id ))
+	{
+	    if(use_gpu_){
+		ROS_INFO("KF GPU Device ID: %d", gpu_id);
+		gpu_device_id = (unsigned int) gpu_id;
+		cv::gpu::setDevice(gpu_device_id);
+	    }
+        }
+
 
 	init_params();
 

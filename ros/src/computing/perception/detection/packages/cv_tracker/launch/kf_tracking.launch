@@ -2,7 +2,8 @@
   <arg name="car" default="true"/>
   <arg name="pedestrian" default="false"/>
   <arg name="sync" default="false" />
-
+  <arg name="use_gpu" default="true"/>
+  <arg name="gpu_device_id" default="0"/>
   <arg name="camera_id" default=""/>
 
   <group if="$(arg car)">
@@ -15,6 +16,8 @@
           <param name="image_node" type="str" value="$(arg camera_id)$(arg image_src_car)"/>
           <remap from="/obj_car/image_obj_ranged" to="/sync_tracking/obj_car/image_obj_ranged" if="$(arg sync)" />
           <remap from="/image_raw" to="/sync_tracking/image_raw" if="$(arg sync)" />
+	  <param name="use_gpu" type="bool" value="$(arg use_gpu)"/>
+	  <param name="gpu_device_id" type="int" value="$(arg gpu_device_id)"/>
       </node>
 
     </group>
@@ -30,6 +33,8 @@
           <param name="image_node" type="str" value="$(arg camera_id)$(arg image_src_pedestrian)"/>
           <remap from="/obj_person/image_obj_ranged" to="/sync_tracking/obj_person/image_obj_ranged" if="$(arg sync)" />
           <remap from="/image_raw" to="/sync_tracking/image_raw" if="$(arg sync)" />
+	  <param name="use_gpu" type="bool" value="$(arg use_gpu)"/>
+	  <param name="gpu_device_id" type="int" value="$(arg gpu_device_id)"/>
       </node>
 
     </group>

@@ -325,3 +325,5 @@ pcl::Registration<PointSource, PointTarget, Scalar>::omp_align (PointCloudSource
 
   deinitCompute ();
 }
+
+

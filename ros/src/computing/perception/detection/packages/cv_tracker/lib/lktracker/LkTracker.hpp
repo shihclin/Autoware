@@ -57,7 +57,7 @@ public:
 
 
 	LkTracker(int in_id, float in_min_height, float in_max_height, float in_range);
-	cv::Mat 								Track(cv::Mat image, cv::LatentSvmDetector::ObjectDetection in_detections, bool in_update);
+	cv::Mat 								Track(cv::Mat image, cv::LatentSvmDetector::ObjectDetection in_detections, bool in_update, bool use_gpu_);
 	cv::LatentSvmDetector::ObjectDetection	GetTrackedObject();
 	unsigned int							GetRemainingLifespan();
 	void 									NullifyLifespan();

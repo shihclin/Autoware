@@ -71,9 +71,9 @@ static std::chrono::time_point<std::chrono::system_clock> begin, tick;
 static double timestamp;
 
 
-static double klt_time = 0.0;
-static double track_time = 0.0;
-static double detect_time = 0.0;
+static double klt_time		    = 0.0;
+static double track_time	    = 0.0;
+static double detect_time	    = 0.0;
 static std::chrono::time_point<std::chrono::system_clock> track_start, track_end;
 static std::chrono::time_point<std::chrono::system_clock> detect_start, detect_end;
 
@@ -87,12 +87,16 @@ class RosTrackerApp
 
 	std::string 		tracked_type_;
 
-	bool 				ready_;
+	bool 			ready_;
 
-	bool				track_ready_;
-	bool				detect_ready_;
+	bool			track_ready_;
+	bool			detect_ready_;
 
-	int					num_trackers_;
+	int			num_trackers_;
+
+	bool			use_gpu_;
+	unsigned int		gpu_device_id;
+
 
 	std::vector<LkTracker*> obj_trackers_;
 	std::vector<cv::LatentSvmDetector::ObjectDetection> obj_detections_;
@@ -240,7 +244,7 @@ public:
 				if ( (intersection.width * intersection.height) > area*0.3 )
 				{
 
-					obj_trackers_[j]->Track(image_track, obj_detections_[i], true);
+					obj_trackers_[j]->Track(image_track, obj_detections_[i], true, use_gpu_);
 					tracker_matched[j] = true;
 					object_matched[i] = true;
 					//std::cout << "matched " << i << " with " << j << std::endl;
@@ -253,7 +257,7 @@ public:
 		{
 			if(!tracker_matched[i])
 			{
-				obj_trackers_[i]->Track(image_track, empty_detection, false);
+				obj_trackers_[i]->Track(image_track, empty_detection, false, use_gpu_);
 			}
 		}
 
@@ -265,7 +269,7 @@ public:
 				if (num_trackers_ >10)
 					num_trackers_=0;
 				LkTracker* new_tracker = new LkTracker(++num_trackers_, min_heights_[i], max_heights_[i], ranges_[i]);
-				new_tracker->Track(image_track, obj_detections_[i], true);
+				new_tracker->Track(image_track, obj_detections_[i], true, use_gpu_);
 
 				//std::cout << "added new tracker" << std::endl;
 				obj_trackers_.push_back(new_tracker);
@@ -461,6 +465,22 @@ public:
 			image_obj_topic_str = "image_obj_ranged";
 		}
 
+		if (private_node_handle.getParam("use_gpu", use_gpu_))
+                {
+                        ROS_INFO("KLT Tracking GPU Mode: %d", use_gpu_);
+                }
+		else
+		{
+			ROS_INFO("KLT Tracking CPU Mode");
+		}
+		int gpu_id;
+                if (private_node_handle.getParam("gpu_device_id", gpu_id ))
+                {
+                        ROS_INFO("KLT GPU Device ID: %d", gpu_id);
+                        gpu_device_id = (unsigned int) gpu_id;
+			cv::gpu::setDevice(gpu_device_id);
+                }
+
 
 		publisher_tracked_objects_ = node_handle_.advertise<cv_tracker::image_obj_tracked>("image_obj_tracked", 1);
 
@@ -482,10 +502,12 @@ public:
 
 	RosTrackerApp()
 	{
-		ready_ = true;
-		num_trackers_ = 0;
-		track_ready_  = false;
-		detect_ready_ = false;
+		ready_		= true;
+		num_trackers_	= 0;
+		use_gpu_	= true;
+		gpu_device_id	= 0;
+		track_ready_	= false;
+		detect_ready_	= false;
 	}
 
 };

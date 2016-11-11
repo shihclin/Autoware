@@ -1,7 +1,7 @@
 #include "LkTracker.hpp"
 
-#define USE_GPU_
-#define _TIMEPROCESS
+//#define USE_GPU_
+//#define _TIMEPROCESS
 
 LkTracker::LkTracker(int in_id, float in_min_height, float in_max_height, float in_range)
 {
@@ -88,12 +88,13 @@ unsigned long int LkTracker::GetFrameCount()
   return frame_count_;
 }
 
-cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetection in_detection, bool in_update)
+cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetection in_detection, bool in_update, bool use_gpu_)
 {
   cv::Mat gray_image;
   //cv::cvtColor(in_image, in_image, cv::COLOR_RGB2BGR);
   cv::cvtColor(in_image, gray_image, cv::COLOR_BGR2GRAY);
   cv::Mat mask(gray_image.size(), CV_8UC1);
+  cv::gpu::GpuMat prev_image_gpu, gray_image_gpu, prev_points_gpu, current_points_gpu, status_gpu, *err_gpu = NULL;
 
 
   if (in_update && in_detection.rect.width > 0)
@@ -133,7 +134,7 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
       ( matched_detection_.rect.width>0 && matched_detection_.rect.height >0 ) )//add as new object
     {
 
-#ifdef USE_GPU_
+    if(use_gpu_){
 	cv::gpu::GpuMat mask_gpu(mask);
 	cv::gpu::GpuMat gray_image_gpu(gray_image);
 	cv::gpu::GpuMat current_points_gpu;	
@@ -146,7 +147,8 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
     
 	if(!current_points_cpu.empty())
 	    current_points_cpu.copyTo(current_points_);
-#else
+      }
+    else{
 
 	cv::goodFeaturesToTrack(gray_image,			//input to extract corners
 				current_points_,			//out array with corners in the image
@@ -157,7 +159,7 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
 				3,				//block size
 				true,				//true to use harris corner detector, otherwise use tomasi
 				0.04);				//harris detector free parameter
-#endif
+    }
 
       if (current_points_.size()<=0)
         {
@@ -204,14 +206,13 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
 
 
 
-#ifdef USE_GPU_
+    if(use_gpu_){
       //GPU
-      cv::gpu::GpuMat prev_image_gpu, gray_image_gpu, prev_points_gpu, current_points_gpu, status_gpu, *err_gpu = NULL;
       prev_image_gpu.upload(prev_image_);
       gray_image_gpu.upload(gray_image);
       prev_points_gpu.upload(converted_prev_points.t());
       //std::cout << "STUFF " << "rows: " << prev_points_gpu.rows << " cols: " << prev_points_gpu.cols << std::endl;
-#endif
+    }
 
       cv::Mat current_points_cpu;
       cv::Mat status_cpu;
@@ -227,8 +228,7 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
 
 
 
-#ifdef USE_GPU_
-
+    if(use_gpu_){
       //GPU
       cv::gpu::PyrLKOpticalFlow optical_flow = cv::gpu::PyrLKOpticalFlow();
 
@@ -238,7 +238,8 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
                             current_points_gpu,
                             status_gpu,
                             err_gpu);
-#else
+    }
+    else{
       //CPU
       cv::calcOpticalFlowPyrLK(prev_image_, 			//previous image frame
                                gray_image, 			//current image frame
@@ -251,7 +252,7 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
                                term_criteria_,
                                0,
                                0.001);
-#endif
+    }
 
 #ifdef _TIMEPROCESS
 	timer.stop();
@@ -260,12 +261,13 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
 	timer.start();
 #endif
 
-#ifdef USE_GPU_
+    if(use_gpu_){
       current_points_gpu.download(current_points_cpu);
       status_gpu.download(status_cpu);
       if(err_gpu)
 	err_gpu->download(err_cpu);
-#endif
+    }
+
       if(!current_points_cpu.empty())
         current_points_cpu.copyTo(current_points_);
 
@@ -448,15 +450,14 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
       previous_centroid_y_ = current_centroid_y_;
     }
 
-#ifdef USE_GPU_
-    std::cout<<"GPU: ";
-#else
-    std::cout<<"CPU: ";
-#endif
-
 #ifdef _TIMEPROCESS
 	timer.stop();
 	float t_all_post = timer.getTimeMilli();
+	if(use_gpu_)
+	    std::cout<<"GPU: ";
+	else
+	    std::cout<<"CPU: ";
+
 	std::cout << "GFTT: " << t_GFTT << " Setup: " << t_setup << " OpticalFlow: " << t_opticalflow << " Post-Opticalflow: " << t_of_post << " Kmeans: " << t_kmeans << " Post: " << t_all_post << " Total: " << t_GFTT + t_setup + t_opticalflow + t_of_post + t_kmeans + t_all_post << std::endl;
 #endif
 

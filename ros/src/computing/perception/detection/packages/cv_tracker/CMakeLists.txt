@@ -11,6 +11,8 @@ FIND_PACKAGE(catkin REQUIRED COMPONENTS
   message_generation
   libdpm_ocv
   libdpm_ttic
+  librcnn
+  libfasterrcnn
   fusion
   kf
   tf
@@ -45,7 +47,7 @@ generate_messages(
 )
 
 catkin_package(
-  CATKIN_DEPENDS libdpm_ocv libdpm_ttic scan2image fusion kf runtime_manager calibration_camera_lidar message_runtime std_msgs geometry_msgs
+  CATKIN_DEPENDS libdpm_ocv libdpm_ttic librcnn libfasterrcnn scan2image fusion kf runtime_manager calibration_camera_lidar message_runtime std_msgs geometry_msgs
 )
 
 ###########
@@ -218,7 +220,7 @@ ADD_DEPENDENCIES(klt_track
 
 ###########################################CAFFE NEEDS TO BE PREVIOUSLY COMPILED####################
 ##############DONT FORGET TO INSTALL fastrcnn's caffe dynamic libraries to /usr/local/lib	 	### 
-set(CAFFE_PATH "home/shihclin/Workloads/fast-rcnn/caffe-fast-rcnn/distribute")
+set(CAFFE_PATH "/home/shihclin/Workloads/fast-rcnn/caffe-fast-rcnn/distribute")
 ####################################################################################################
 
 if(EXISTS "${CAFFE_PATH}")
@@ -252,4 +254,44 @@ ENDIF()
   )
 else()
   message("'FastRCNN/Caffe' are not installed. 'rcnn_node' will not be built.")
+endif()
+
+
+############# Faster RCNN#############
+
+###########################################CAFFE NEEDS TO BE PREVIOUSLY COMPILED####################
+##############DONT FORGET TO INSTALL fastrcnn's caffe dynamic libraries to /usr/local/lib	 	#### 
+set(FASTERCAFFE_PATH "/home/shihclin/Workloads/py-faster-rcnn/caffe-fast-rcnn/distribute")
+####################################################################################################
+
+if(EXISTS "${FASTERCAFFE_PATH}")
+  find_package(libfasterrcnn)
+
+  INCLUDE_DIRECTORIES(
+    ${libfasterrcnn_INCLUDE_DIRS}
+    ${FASTERCAFFE_PATH}/include
+  )
+IF(HDF5_FOUND)
+  INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
+ENDIF()
+
+  ADD_EXECUTABLE(faster_rcnn_node
+    nodes/FasterRcnn/faster_rcnn_node.cpp
+  )
+  TARGET_LINK_LIBRARIES(faster_rcnn_node
+    libfasterrcnn
+    ${catkin_LIBRARIES}
+    ${OpenCV_LIBS}
+    ${CUDA_LIBRARIES}
+    ${CUDA_CUBLAS_LIBRARIES}
+    ${CUDA_curand_LIBRARY}
+  )
+
+  ADD_DEPENDENCIES(faster_rcnn_node
+    cv_tracker_generate_messages_cpp
+    runtime_manager_generate_messages_cpp
+    libfasterrcnn
+  )
+else()
+  message("'Faster RCNN/Caffe' are not installed. 'faster_rcnn_node' will not be built.")
 endif()
