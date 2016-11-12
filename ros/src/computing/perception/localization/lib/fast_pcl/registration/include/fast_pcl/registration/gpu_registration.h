@@ -617,6 +617,6 @@ namespace pcl
    };
 }
 
-#include "fast_pcl/registration/impl/registration.hpp"
+#include "fast_pcl/registration/impl/gpu_registration.hpp"
 
 #endif  //#ifndef FAST_PCL_REGISTRATION_H_

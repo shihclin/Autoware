@@ -59,14 +59,32 @@ add_executable(lazy_ndt_mapping nodes/lazy_ndt_mapping/lazy_ndt_mapping.cpp)
 add_executable(local2global nodes/local2global/local2global.cpp)
 add_executable(queue_counter nodes/queue_counter/queue_counter.cpp)
 
+#################
+#New Add for GPU#
+#################
+#add_custom_command(TARGET gpu_ndt_matching COMMAND pgc++ -acc -ta=nvidia -Minfo=accel -O3 -c -o gpu_matching.a nodes/gpu_ndt_matching/gpu_ndt_matching.cpp)
+#################
+
 target_link_libraries(ndt_matching ${catkin_LIBRARIES} ${FAST_PCL_LIBRARIES})
 target_link_libraries(ndt_mapping ${catkin_LIBRARIES} ${FAST_PCL_LIBRARIES})
 target_link_libraries(lazy_ndt_mapping ${catkin_LIBRARIES} ${FAST_PCL_LIBRARIES})
 target_link_libraries(local2global ${catkin_LIBRARIES})
 target_link_libraries(queue_counter ${catkin_LIBRARIES})
 
+#################
+#New Add for GPU#
+#################
+#target_link_libraries(gpu_ndt_matching ${catkin_LIBRARIES} ${FAST_PCL_LIBRARIES})
+#################
+
 add_dependencies(ndt_matching runtime_manager_generate_messages_cpp ndt_localizer_generate_messages_cpp)
 add_dependencies(ndt_mapping runtime_manager_generate_messages_cpp)
 add_dependencies(lazy_ndt_mapping runtime_manager_generate_messages_cpp)
 add_dependencies(local2global runtime_manager_generate_messages_cpp)
 add_dependencies(queue_counter runtime_manager_generate_messages_cpp)
+
+#################
+#New Add for GPU#
+#################
+#add_dependencies(gpu_ndt_matching runtime_manager_generate_messages_cpp ndt_localizer_generate_messages_cpp)
+#################

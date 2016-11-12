@@ -61,7 +61,7 @@
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
 #ifdef USE_FAST_PCL
-#include <fast_pcl/registration/ndt.h>
+#include <fast_pcl/registration/gpu_ndt.h>
 #else
 #include <pcl/registration/ndt.h>
 #endif
@@ -174,6 +174,8 @@ static ros::Publisher ndt_reliability_pub;
 static std_msgs::Float32 ndt_reliability;
 
 static bool _use_openmp = false;
+static bool _use_gpu = true;
+
 
 
 //Profiling File
@@ -394,38 +396,38 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     Eigen::Matrix4f init_guess = (init_translation * init_rotation_z * init_rotation_y * init_rotation_x) * tf_btol;
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-#ifdef USE_FAST_PCL
-    if(_use_openmp == true){
+//#ifdef USE_FAST_PCL
+    if(_use_gpu == true){
         align_start = std::chrono::system_clock::now();
     	ndt.omp_align(*output_cloud, init_guess);
         align_end = std::chrono::system_clock::now();
     }else{
-#endif
+//#endif
         align_start = std::chrono::system_clock::now();
     	ndt.align(*output_cloud, init_guess);
         align_end = std::chrono::system_clock::now();
-#ifdef USE_FAST_PCL
+//#ifdef USE_FAST_PCL
     }
-#endif
+//#endif
     //align_time = std::chrono::duration_cast<std::chrono::microseconds>(align_end - align_start).count() / 1000.0;
 
     t = ndt.getFinalTransformation();  // localizer
     t2 = t * tf_ltob;                  // base_link
 
     iteration = ndt.getFinalNumIteration();
-#ifdef USE_FAST_PCL
-    if(_use_openmp == true){
+//#ifdef USE_FAST_PCL
+    if(_use_gpu == true){
         getFitnessScore_start = std::chrono::system_clock::now();
     	fitness_score = ndt.omp_getFitnessScore();
         getFitnessScore_end = std::chrono::system_clock::now();
     }else{
-#endif
+//#endif
         getFitnessScore_start = std::chrono::system_clock::now();
     	fitness_score = ndt.getFitnessScore();
         getFitnessScore_end = std::chrono::system_clock::now();
-#ifdef USE_FAST_PCL
+//#ifdef USE_FAST_PCL
     }
-#endif
+//#endif
     //getFitnessScore_time = std::chrono::duration_cast<std::chrono::microseconds>(getFitnessScore_end - getFitnessScore_start).count() / 1000.0;
 
     trans_probability = ndt.getTransformationProbability();
@@ -644,7 +646,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     //std::cout << "NDT has converged: " << ndt.hasConverged() << std::endl;
     //std::cout << "Fitness Score: " << fitness_score << std::endl;
     //std::cout << "Transformation Probability: " << ndt.getTransformationProbability() << std::endl;
-    std::cout << "NDT matching time: " << exe_time << " ms." << std::endl;
+    std::cout << "GPU: NDT matching time: " << exe_time << " ms." << std::endl;
         tick = std::chrono::system_clock::now();
         timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
     	ofs_times << ", " << timestamp << " " << exe_time;
@@ -729,6 +731,7 @@ int main(int argc, char** argv)
   private_nh.getParam("queue_size", _queue_size);
   private_nh.getParam("offset", _offset);
   private_nh.getParam("use_openmp", _use_openmp);
+  private_nh.getParam("use_gpu", _use_gpu);
 
   if (nh.getParam("localizer", _localizer) == false)
   {
@@ -768,12 +771,13 @@ int main(int argc, char** argv)
   }
 
   std::cout << "-----------------------------------------------------------------" << std::endl;
-  std::cout << "NDT CPU Mode" << std::endl;
+  std::cout << "GPU NDT Mode" << std::endl;
 //  std::cout << "Log file: " << filename << std::endl;
   std::cout << "use_gnss: " << _use_gnss << std::endl;
 //  std::cout << "queue_size: " << _queue_size << std::endl;
 //  std::cout << "offset: " << _offset << std::endl;
   std::cout << "use_openmp: " << _use_openmp << std::endl;
+  std::cout << "use_gpu: " << _use_gpu << std::endl;
   std::cout << "localizer: " << _localizer << std::endl;
   std::cout << "(tf_x,tf_y,tf_z,tf_roll,tf_pitch,tf_yaw): (" << _tf_x << ", " << _tf_y << ", " << _tf_z << ", "
             << _tf_roll << ", " << _tf_pitch << ", " << _tf_yaw << ")" << std::endl;
