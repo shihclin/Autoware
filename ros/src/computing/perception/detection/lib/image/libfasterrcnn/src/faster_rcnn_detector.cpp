@@ -30,6 +30,7 @@
 
 #include "FasterRcnn_detector.h"
 
+
 //#define _TIMEPROCESS
 
 FasterRcnnDetector::FasterRcnnDetector(std::string& in_network_definition_file, std::string& in_pre_trained_model_file,
@@ -112,15 +113,18 @@ void FasterRcnnDetector::ConvertImageToBlob(cv::Mat& in_image, caffe::BlobProto&
 
 	unsigned int img_channels = in_image.channels();
 	unsigned int img_total = in_image.total();
+	//std::cout<<"img_channels: "<<img_channels<<" img_total: "<<img_total<<std::endl;
 	//OpenCV Data is stored in BGR
 	//RE ORDER PIXEL DATA FROM [(BGR)(BGR)(BGR)...(BGR)]   => [(BBB)..(BBB) (GGG)..(GGG) (RRR)..(RRR)]
 	for(unsigned int j = 0; j < img_channels; j++)						//do as manychannels as we have (in our tests 3)
 	{
-		for (unsigned int i = j; i < img_total; i++)
+		//for (unsigned int i = j; i < img_total; i++)
+		for (unsigned int i = 0; i < img_total; i++)
 		{
 			out_blob.add_data(((float*)(in_image.data))[i*img_channels]);// slide through each channel
 		}
 	}
+	//std::cout<<"out_blob: "<<out_blob.data_size()<<std::endl;
 }
 
 void FasterRcnnDetector::ConvertRoisToBlob(std::vector< cv::Scalar >& in_rois, caffe::BlobProto& out_blob)
@@ -167,7 +171,7 @@ std::vector< RectClassScore<float> > FasterRcnnDetector::GetRectClassesScored(	s
 		h = ((cv::Scalar)(in_proposals)[j]).val[3] - ((cv::Scalar)(in_proposals)[j]).val[1];
 		for (int i = 0, m=0; i < FasterRcnn::NUM_CLASSES*4; i+=4, k++, m++)//repeat for all 21 classes			// four points on each rect
 		{
-			if ( (in_probabilities[k] >=in_score_threshold) && CheckClasses(m, in_classes))//check if the class is being searched, otherwise do not add the detection
+			//if ( (in_probabilities[k] >=in_score_threshold) && CheckClasses(m, in_classes))//check if the class is being searched, otherwise do not add the detection
 			{
 				int index = j*FasterRcnn::NUM_CLASSES*4 + i;
 				//[0] = X1; [1] = Y1; [2] = W; [3] = H
@@ -230,8 +234,8 @@ std::vector< RectClassScore<float> >
 	timer.reset(); timer.start();
 	timer.start();
 #endif
-	
-	std::vector< cv::Scalar > proposals = GenerateProposals(float_image.cols, float_image.rows, in_slices, in_box_overlap);
+
+	//std::vector< cv::Scalar > proposals = GenerateProposals(float_image.cols, float_image.rows, in_slices, in_box_overlap);
 /*
 #ifdef _TIMEPROCESS
 	timer.stop();
@@ -293,12 +297,22 @@ std::vector< RectClassScore<float> >
 	//check output
 	const boost::shared_ptr<caffe::Blob<float> >& class_probability_layer = net_->blob_by_name("cls_prob");
 	const boost::shared_ptr<caffe::Blob<float> >& bounding_box_predicted_layer = net_->blob_by_name("bbox_pred");
+	const boost::shared_ptr<caffe::Blob<float> >& rois_layer = net_->blob_by_name("rois");
 
 	//convert to rects
 	const float* class_probability_data	    = class_probability_layer->cpu_data();
 	const float* bounding_box_predicted_data    = bounding_box_predicted_layer->cpu_data();
+	const float* rois_data		    = rois_layer->cpu_data();
+
+	//std::cout<<"ROIS TEST: "<<rois_layer->count()<<std::endl;
+	//std::cout<<"cls_prob TEST: "<<class_probability_layer->count()<<", bb layer: "<<bounding_box_predicted_layer->count()<<std::endl;;
+	
+	std::vector< cv::Scalar > proposals;
+	unsigned int x = rois_data[1], y = rois_data[2], w = rois_data[3], h = rois_data[4];
+	proposals.push_back(cv::Scalar(x, y, w, h));
 
 	std::vector< RectClassScore<float> > detections;
+	
 	if ((unsigned int)bounding_box_predicted_layer->count() == proposals.size()*FasterRcnn::NUM_CLASSES*4)//4 points for each of the 21 classes
 	{
 		detections = GetRectClassesScored(proposals, in_classes, in_score_threshold, bounding_box_predicted_data, class_probability_data, float_image.cols, float_image.rows);
@@ -314,7 +328,6 @@ std::vector< RectClassScore<float> >
 	std::cout << t_preprocess << ","<<  t_datapreparation << "," << t_fwd << "," << t_out << std::endl;
 	//std::cout << t_preprocess << "," << t_proposal << ","<<  t_datapreparation << "," << t_fwd << "," << t_out << std::endl;
 #endif
-
 
 	return detections;
 }
