@@ -367,7 +367,9 @@ pcl::NormalDistributionsTransform<PointSource, PointTarget>::omp_computeDerivati
 //#pragma omp parallel for num_threads(num_threads) reduction(+:score) private(x_pt, x_trans_pt, x, x_trans, cell, c_inv)
 //#endif
 
-#pragma acc parallel loop reduction(+:score)
+
+//KAKAEN
+//#pragma acc parallel loop reduction(+:score)
   // Update gradient and hessian for each point, line 17 in Algorithm 2 [Magnusson 2009]
   for (size_t idx = 0; idx < input_->points.size (); idx++)
   {
@@ -449,7 +451,7 @@ pcl::NormalDistributionsTransform<PointSource, PointTarget>::omp_computeDerivati
 //  for (int i = 0; i < num_threads; ++i) {
 //    score_gradient += score_gradient_i[i];
 //    hessian += hessian_i[i];
-  }
+//  }
 //#endif
 
   return (score);

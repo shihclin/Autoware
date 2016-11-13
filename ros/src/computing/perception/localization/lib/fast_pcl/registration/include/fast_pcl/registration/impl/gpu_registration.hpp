@@ -181,7 +181,10 @@ pcl::Registration<PointSource, PointTarget, Scalar>::omp_getFitnessScore (double
 //  {
 /*#pragma omp for*/
 //#endif
-#pragma acc parallel loop
+
+
+//KAKAEN
+//#pragma acc parallel loop
   for (size_t i = 0; i < input_->size (); ++i)
   {
     const PointSource &src = input_->points[i];
@@ -201,7 +204,9 @@ pcl::Registration<PointSource, PointTarget, Scalar>::omp_getFitnessScore (double
 //#ifdef _OPENMP
 /*#pragma omp for private(nn_dists, nn_indices) reduction(+:fitness_score)*/
 //#endif
-#pragma acc parallel loop reduction(+:fitness_score)
+
+//KAKAEN
+//#pragma acc parallel loop reduction(+:fitness_score)
   for (size_t i = 0; i < input_transformed.points.size (); ++i)
   {
     // Find its nearest neighbor in the target

@@ -62,9 +62,11 @@ add_executable(queue_counter nodes/queue_counter/queue_counter.cpp)
 #################
 #New Add for GPU#
 #################
+#add_executable(gpu_ndt_matching nodes/gpu_ndt_matching/gpu_ndt_matching.cpp)
 #add_custom_target(gpu_ndt_matching)
-#add_custom_command(OUTPUT gpu_ndt_matching COMMAND pgc++ -acc -ta=nvidia -Minfo=accel -O3 -c -o gpu_matching.so nodes/gpu_ndt_matching/gpu_ndt_matching.cpp)
+#add_custom_command(TARGET gpu_ndt_matching POST_BUILD COMMAND pgc++ -std=c++11 -acc -ta=nvidia -Minfo=accel -O3 -o gpu_ndt_matching nodes/gpu_ndt_matching/gpu_ndt_matching.cpp)
 #################
+
 
 target_link_libraries(ndt_matching ${catkin_LIBRARIES} ${FAST_PCL_LIBRARIES})
 target_link_libraries(ndt_mapping ${catkin_LIBRARIES} ${FAST_PCL_LIBRARIES})
