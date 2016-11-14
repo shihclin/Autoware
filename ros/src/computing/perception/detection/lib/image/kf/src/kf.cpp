@@ -88,6 +88,7 @@ static cv_tracker::image_obj_tracked kf_objects_msg_;
 
 
 static std::ofstream ofs_times;
+static std::ofstream ofs_times_obj;
 static std::ofstream ofs_histo;
 static std::string filename;
 static std::chrono::time_point<std::chrono::system_clock> begin, tick;
@@ -1024,6 +1025,10 @@ void detections_callback(cv_tracker::image_obj_ranged image_objects_msg)
 		_max_heights.clear();
 
 		std::cout<<"Detected Object Number: "<<num<<std::endl;
+		tick = std::chrono::system_clock::now();
+                timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
+                ofs_times_obj << ", " << timestamp << " " << num;
+
 
 		for (unsigned int i=0; i<num;i++)
 		{
@@ -1096,18 +1101,18 @@ int kf_main(int argc, char* argv[])
 
 	cv::generateColors(_colors, 25);
 
-#ifdef USE_GPU_
+//#ifdef USE_GPU_
 	//cv::gpu::printCudaDeviceInfo(gpu::getDevice(1));
-	cv::gpu::setDevice(1);
-	ROS_INFO("Enter kf_track GPU version");
-#else
-	ROS_INFO("Enter kf_track CPU version");
-#endif
+//#endif
 
         /*=====*/
         //For graph
         ofs_times.open("kf_track_timeseries.csv", std::ios::app);
         ofs_times << "KF Tracking";
+
+        ofs_times_obj.open("kf_track_obj_num_timeseries.csv", std::ios::app);
+        ofs_times_obj << "KF Tracking Object Number";
+
         ofs_histo.open("kf_track_histogram.csv", std::ios::app);
 	begin = std::chrono::system_clock::now();
 
@@ -1144,13 +1149,17 @@ int kf_main(int argc, char* argv[])
         if (private_nh.getParam("gpu_device_id", gpu_id ))
 	{
 	    if(use_gpu_){
+		ROS_INFO("Enter kf_track GPU version");
 		ROS_INFO("KF GPU Device ID: %d", gpu_id);
 		gpu_device_id = (unsigned int) gpu_id;
 		cv::gpu::setDevice(gpu_device_id);
 	    }
+	    else{
+		ROS_INFO("Enter kf_track CPU version");
+	    }
         }
 
-
+	
 	init_params();
 
 	ros::Subscriber sub_image = n.subscribe(image_topic, 1, image_callback);

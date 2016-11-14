@@ -308,8 +308,9 @@ std::vector< RectClassScore<float> >
 	//std::cout<<"cls_prob TEST: "<<class_probability_layer->count()<<", bb layer: "<<bounding_box_predicted_layer->count()<<std::endl;;
 	
 	std::vector< cv::Scalar > proposals;
-	unsigned int x = rois_data[1], y = rois_data[2], w = rois_data[3], h = rois_data[4];
-	proposals.push_back(cv::Scalar(x, y, w, h));
+	    unsigned int z = rois_data[0], x = rois_data[1], y = rois_data[2], w = rois_data[3], h = rois_data[4];
+	//std::cout <<"ROIS: "<< z <<" "<< x <<" "<<y<<" "<<w<<" "<<h<<std::endl;
+	    proposals.push_back(cv::Scalar(x, y, w, h));
 
 	std::vector< RectClassScore<float> > detections;
 	

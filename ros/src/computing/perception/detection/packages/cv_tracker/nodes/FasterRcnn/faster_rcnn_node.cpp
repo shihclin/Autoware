@@ -41,6 +41,18 @@
 #include <opencv2/contrib/contrib.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+/*=====*/
+#include <chrono>
+
+
+static std::ofstream ofs_times;
+static std::ofstream ofs_histo;
+static std::string filename;
+static std::chrono::time_point<std::chrono::system_clock> begin, tick;
+static double timestamp;
+
+
+
 class RosFasterRcnnApp
 {
 	ros::Subscriber subscriber_image_raw_;
@@ -122,7 +134,14 @@ class RosFasterRcnnApp
 		detections = faster_rcnn_detector_->Detect(image, detect_classes_, score_threshold_, image_slices_, slices_overlap_, group_threshold_);
 
 		timer.stop();
-		std::cout << "RCNN Detection time: " << timer.getTimeMilli() << " ms." <<std::endl;
+		float detect_time = timer.getTimeMilli();
+		std::cout << "Faster RCNN Detection time: " << detect_time << " ms." <<std::endl;
+
+                tick = std::chrono::system_clock::now();
+                timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
+                ofs_times << ", " << timestamp << " " << detect_time;
+                ofs_histo << ", " << detect_time;
+
 
 		//Prepare Output message
 		cv_tracker::image_obj output_car_message;
@@ -159,6 +178,15 @@ public:
 	{
 		//ROS STUFF
 		ros::NodeHandle private_node_handle("~");//to receive args
+
+                ROS_INFO("Enter Faster RCNN");
+                /*=====*/
+                //For graph  
+                ofs_times.open("FasterRcnn_detect_timeseries.csv", std::ios::app);
+                ofs_times << "Faster RCNN";
+                ofs_histo.open("FasterRcnn_detect_histogram.csv", std::ios::app);
+                begin = std::chrono::system_clock::now();
+
 
 		//RECEIVE IMAGE TOPIC NAME
 		std::string image_raw_topic_str;

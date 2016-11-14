@@ -16,6 +16,7 @@ pkg_check_modules(HDF5 hdf5)
 ##############DONT FORGET TO INSTALL fastrcnn's caffe dynamic libraries to /usr/local/lib     #### 
 #set(CAFFE_PATH "$ENV{HOME}/fast-rcnn/caffe-fast-rcnn/distribute")		       	      ####
 set(CAFFE_PATH "/home/shihclin/Workloads/py-faster-rcnn/caffe-fast-rcnn/distribute")	      ####
+#set(CAFFE_PATH "/home/shihclin/Workloads/mscnn/distribute")	      ####
 ###################################################################################################
 
 if(EXISTS "${CAFFE_PATH}")
@@ -55,6 +56,7 @@ target_link_libraries(libfasterrcnn
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   glog
+  #${CAFFE_PATH}/../.build_release/lib/libcaffe.so
   ${CAFFE_PATH}/lib/libcaffe.so
 )
 

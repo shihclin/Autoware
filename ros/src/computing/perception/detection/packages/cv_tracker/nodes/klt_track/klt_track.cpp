@@ -65,6 +65,7 @@
 
 
 static std::ofstream ofs_times;
+static std::ofstream ofs_times_obj;
 static std::ofstream ofs_histo;
 static std::string filename;
 static std::chrono::time_point<std::chrono::system_clock> begin, tick;
@@ -375,7 +376,10 @@ public:
 			obj_detections_.clear();
             		ranges_.clear();
 			std::cout<<"Detected Object Number: "<<num<<std::endl;
-            
+			tick = std::chrono::system_clock::now();
+			timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
+			ofs_times_obj << ", " << timestamp << " " << num;           
+ 
 			for (unsigned int i=0; i<num;i++)
 			{
 				cv::Rect tmp;
@@ -439,6 +443,10 @@ public:
 		//For graph  
 		ofs_times.open("klt_track_timeseries.csv", std::ios::app);
 		ofs_times << "KLT Tracking";
+
+		ofs_times_obj.open("klt_track_obj_num_timeseries.csv", std::ios::app);
+		ofs_times_obj << "KLT Tracking Object Number";
+
 		ofs_histo.open("klt_track_histogram.csv", std::ios::app);
 		begin = std::chrono::system_clock::now();
 
