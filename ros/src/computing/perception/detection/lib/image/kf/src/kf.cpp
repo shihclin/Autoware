@@ -1107,14 +1107,25 @@ int kf_main(int argc, char* argv[])
 
         /*=====*/
         //For graph
-        ofs_times.open("kf_track_timeseries.csv", std::ios::app);
+/*	char buffer[80];
+        std::time_t now = std::time(NULL);
+        std::tm *pnow = std::localtime(&now);
+        std::strftime(buffer,80,"%Y%m%d_%H%M%S",pnow);
+*/ 
+	std::string timefilename = "kf_track_timeseries.csv";
+        std::string timeobjfilename = "kf_track_obj_num_timeseries.csv";
+        std::string hisfilename = "kf_track_histogram.csv";
+
+
+        ofs_times.open(timefilename, std::ios::app);
         ofs_times << "KF Tracking";
 
-        ofs_times_obj.open("kf_track_obj_num_timeseries.csv", std::ios::app);
+        ofs_times_obj.open(timeobjfilename, std::ios::app);
         ofs_times_obj << "KF Tracking Object Number";
 
-        ofs_histo.open("kf_track_histogram.csv", std::ios::app);
-	begin = std::chrono::system_clock::now();
+        ofs_histo.open(hisfilename, std::ios::app);
+        begin = std::chrono::system_clock::now();
+
 
 	std::string image_topic;
 	std::string obj_topic;

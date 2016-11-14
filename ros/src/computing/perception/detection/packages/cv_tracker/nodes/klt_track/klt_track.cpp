@@ -435,19 +435,30 @@ public:
 	{
 		std::string image_raw_topic_str;
 		std::string image_obj_topic_str;
-
+		char buffer[80];
+	    
 		ros::NodeHandle private_node_handle("~");//to receive args
 
 		 ROS_INFO("Enter klt_track");
 		/*=====*/
-		//For graph  
-		ofs_times.open("klt_track_timeseries.csv", std::ios::app);
+		//For graph
+/*  
+		std::time_t now = std::time(NULL);
+		std::tm *pnow = std::localtime(&now);
+		std::strftime(buffer,80,"%Y%m%d_%H%M%S",pnow);
+*/
+		std::string timefilename = "klt_track_timeseries.csv";
+		std::string timeobjfilename = "klt_track_obj_num_timeseries.csv";
+		std::string hisfilename = "klt_track_histogram.csv";
+		
+
+		ofs_times.open(timefilename, std::ios::app);
 		ofs_times << "KLT Tracking";
 
-		ofs_times_obj.open("klt_track_obj_num_timeseries.csv", std::ios::app);
+		ofs_times_obj.open(timeobjfilename, std::ios::app);
 		ofs_times_obj << "KLT Tracking Object Number";
 
-		ofs_histo.open("klt_track_histogram.csv", std::ios::app);
+		ofs_histo.open(hisfilename, std::ios::app);
 		begin = std::chrono::system_clock::now();
 
 
