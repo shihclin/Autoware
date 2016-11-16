@@ -124,6 +124,8 @@ static ros::Time current_scan_time;
 static ros::Time previous_scan_time;
 static ros::Duration scan_duration;
 
+static double align_time = 0.0;
+static double getFitnessScore_time = 0.0;
 static double exe_time = 0.0;
 static int iteration = 0;
 static double fitness_score = 0.0;
@@ -407,7 +409,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 #ifdef USE_FAST_PCL
     }
 #endif
-    //align_time = std::chrono::duration_cast<std::chrono::microseconds>(align_end - align_start).count() / 1000.0;
+    align_time = std::chrono::duration_cast<std::chrono::microseconds>(align_end - align_start).count() / 1000.0;
 
     t = ndt.getFinalTransformation();  // localizer
     t2 = t * tf_ltob;                  // base_link
@@ -426,7 +428,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 #ifdef USE_FAST_PCL
     }
 #endif
-    //getFitnessScore_time = std::chrono::duration_cast<std::chrono::microseconds>(getFitnessScore_end - getFitnessScore_start).count() / 1000.0;
+    getFitnessScore_time = std::chrono::duration_cast<std::chrono::microseconds>(getFitnessScore_end - getFitnessScore_start).count() / 1000.0;
 
     trans_probability = ndt.getTransformationProbability();
 
@@ -644,7 +646,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     //std::cout << "NDT has converged: " << ndt.hasConverged() << std::endl;
     //std::cout << "Fitness Score: " << fitness_score << std::endl;
     //std::cout << "Transformation Probability: " << ndt.getTransformationProbability() << std::endl;
-    std::cout << "NDT matching time: " << exe_time << " ms." << std::endl;
+    std::cout << "NDT matching time: " << exe_time << " ms. " << align_time <<" "<< getFitnessScore_time <<std::endl;
         tick = std::chrono::system_clock::now();
         timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
     	ofs_times << ", " << timestamp << " " << exe_time;
@@ -772,7 +774,7 @@ int main(int argc, char** argv)
 //  std::cout << "Log file: " << filename << std::endl;
   std::cout << "use_gnss: " << _use_gnss << std::endl;
 //  std::cout << "queue_size: " << _queue_size << std::endl;
-//  std::cout << "offset: " << _offset << std::endl;
+  std::cout << "offset: " << _offset << std::endl;
   std::cout << "use_openmp: " << _use_openmp << std::endl;
   std::cout << "localizer: " << _localizer << std::endl;
   std::cout << "(tf_x,tf_y,tf_z,tf_roll,tf_pitch,tf_yaw): (" << _tf_x << ", " << _tf_y << ", " << _tf_z << ", "
@@ -823,3 +825,4 @@ int main(int argc, char** argv)
 
   return 0;
 }
+

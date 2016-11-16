@@ -115,11 +115,11 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
 
 #ifdef _TIMEPROCESS
     cv::TickMeter timer;
-    float t_setup	= 0.0; 
-    float t_GFTT	= 0.0;
+    float t_setup   = 0.0; 
+    float t_GFTT    = 0.0;
     float t_opticalflow	= 0.0; 
     float t_kmeans	= 0.0;
-    float t_of_post	= 0.0;;
+    float t_of_post = 0.0;;
     timer.start();
 #endif
 
@@ -326,11 +326,6 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
 #ifdef _TIMEPROCESS
 	timer.stop();
 	float t_all_post = timer.getTimeMilli();
-        if(use_gpu_)
-	    std::cout<<"GPU: ";
-        else
-	    std::cout<<"CPU: ";
-
 	std::cout << "GFTT: " << t_GFTT << " Setup: " << t_setup << " OpticalFlow: " << t_opticalflow << " Post-Opticalflow: " << t_of_post << " Kmeans: " << t_kmeans << " Post: " << t_all_post << " Total: " << t_GFTT + t_setup + t_opticalflow + t_of_post + t_kmeans + t_all_post << std::endl;
 #endif
 
@@ -422,11 +417,6 @@ cv::Mat LkTracker::Track(cv::Mat in_image, cv::LatentSvmDetector::ObjectDetectio
 #ifdef _TIMEPROCESS
 	timer.stop();
 	float t_all_post = timer.getTimeMilli();
-        if(use_gpu_)
-	    std::cout<<"GPU: ";
-        else
-	    std::cout<<"CPU: ";
-
 	std::cout << "GFTT: " << t_GFTT << " Setup: " << t_setup << " OpticalFlow: " << t_opticalflow << " Post-Opticalflow: " << t_of_post << " Kmeans: " << t_kmeans << " Post: " << t_all_post << " Total: " << t_GFTT + t_setup + t_opticalflow + t_of_post + t_kmeans + t_all_post << std::endl;
 #endif
 

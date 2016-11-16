@@ -306,6 +306,8 @@ std::vector< RectClassScore<float> >
 
 	//std::cout<<"ROIS TEST: "<<rois_layer->count()<<std::endl;
 	//std::cout<<"cls_prob TEST: "<<class_probability_layer->count()<<", bb layer: "<<bounding_box_predicted_layer->count()<<std::endl;;
+
+	std::cout<<"BB Shape: "<<bounding_box_predicted_layer->shape(0)<< " " << bounding_box_predicted_layer->shape(1)<<", BB layer count: "<<bounding_box_predicted_layer->count()<<std::endl;
 	
 	std::vector< cv::Scalar > proposals;
 	    unsigned int z = rois_data[0], x = rois_data[1], y = rois_data[2], w = rois_data[3], h = rois_data[4];

@@ -63,6 +63,7 @@
 /*=====*/
 #include <chrono>
 
+#define SCHEDULER
 
 static std::ofstream ofs_times;
 static std::ofstream ofs_times_obj;
@@ -71,6 +72,11 @@ static std::string filename;
 static std::chrono::time_point<std::chrono::system_clock> begin, tick;
 static double timestamp;
 
+#ifdef SCHEDULER
+static int	cpu_cnt		    = 0;
+static int	gpu_cnt		    = 0;
+static int	total_cnt	    = 0;
+#endif
 
 static double klt_time		    = 0.0;
 static double track_time	    = 0.0;
@@ -231,6 +237,24 @@ public:
 		std::vector<bool> tracker_matched(obj_trackers_.size(), false);
 		std::vector<bool> object_matched(obj_detections_.size(), false);
 		
+		unsigned int obj_num	= obj_detections_.size();
+
+		//Scheduler
+		bool scheduler	= true;
+
+#ifdef SCHEDULER
+		total_cnt++;		
+		if(obj_num == 0){
+		    scheduler	= false;
+		    cpu_cnt++;
+		}
+		else{
+		    scheduler	= true;
+		    gpu_cnt++;
+		}
+		std::cout<<"scheduler: " << scheduler << " Total Count: "<< total_cnt << " CPU percentage: "<<float(cpu_cnt)/float(total_cnt) << " GPU percentage: "<<float(gpu_cnt)/float(total_cnt)<<std::endl;
+#endif
+
 		//check object detections vs current trackers
 		for (i =0; i< obj_detections_.size(); i++)
 		{
@@ -245,7 +269,8 @@ public:
 				if ( (intersection.width * intersection.height) > area*0.3 )
 				{
 
-					obj_trackers_[j]->Track(image_track, obj_detections_[i], true, use_gpu_);
+					obj_trackers_[j]->Track(image_track, obj_detections_[i], true, use_gpu_&&scheduler);
+					//obj_trackers_[j]->Track(image_track, obj_detections_[i], true, use_gpu_);
 					tracker_matched[j] = true;
 					object_matched[i] = true;
 					//std::cout << "matched " << i << " with " << j << std::endl;
@@ -258,7 +283,8 @@ public:
 		{
 			if(!tracker_matched[i])
 			{
-				obj_trackers_[i]->Track(image_track, empty_detection, false, use_gpu_);
+				obj_trackers_[i]->Track(image_track, empty_detection, false, use_gpu_&&scheduler);
+				//obj_trackers_[i]->Track(image_track, empty_detection, false, use_gpu_);
 			}
 		}
 
@@ -270,7 +296,8 @@ public:
 				if (num_trackers_ >10)
 					num_trackers_=0;
 				LkTracker* new_tracker = new LkTracker(++num_trackers_, min_heights_[i], max_heights_[i], ranges_[i]);
-				new_tracker->Track(image_track, obj_detections_[i], true, use_gpu_);
+				new_tracker->Track(image_track, obj_detections_[i], true, use_gpu_&&scheduler);
+				//new_tracker->Track(image_track, obj_detections_[i], true, use_gpu_);
 
 				//std::cout << "added new tracker" << std::endl;
 				obj_trackers_.push_back(new_tracker);
@@ -349,13 +376,15 @@ public:
 		timer.stop();
 
 		track_time = timer.getTimeMilli();
-		std::cout << "KLT Tracking Time: " << track_time << " ms." << std::endl;
+		std::cout << "KLT Tracking Time: " << track_time << " ms. Object Number: " << obj_num << std::endl;
 
 
 		tick = std::chrono::system_clock::now();
 		timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
 		ofs_times << ", " << timestamp << " " << track_time;   
 		ofs_histo << ", " << track_time;
+		ofs_times_obj << ", " << timestamp << " " << obj_num << " " << track_time;           
+		
 
 		publish_if_possible();
 	}
@@ -375,10 +404,10 @@ public:
 			//points are X,Y,W,H and repeat for each instance
 			obj_detections_.clear();
             		ranges_.clear();
-			std::cout<<"Detected Object Number: "<<num<<std::endl;
-			tick = std::chrono::system_clock::now();
-			timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
-			ofs_times_obj << ", " << timestamp << " " << num;           
+			//std::cout<<"Detected Object Number: "<<num<<std::endl;
+			//tick = std::chrono::system_clock::now();
+			//timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(tick - begin).count() / 1000.0;
+			//ofs_times_obj << ", " << timestamp << " " << num << ;           
  
 			for (unsigned int i=0; i<num;i++)
 			{
@@ -435,7 +464,7 @@ public:
 	{
 		std::string image_raw_topic_str;
 		std::string image_obj_topic_str;
-		char buffer[80];
+		//char buffer[80];
 	    
 		ros::NodeHandle private_node_handle("~");//to receive args
 
@@ -495,9 +524,11 @@ public:
 		int gpu_id;
                 if (private_node_handle.getParam("gpu_device_id", gpu_id ))
                 {
-                        ROS_INFO("KLT GPU Device ID: %d", gpu_id);
-                        gpu_device_id = (unsigned int) gpu_id;
-			cv::gpu::setDevice(gpu_device_id);
+			if(use_gpu_){
+			    ROS_INFO("KLT GPU Device ID: %d", gpu_id);
+			    gpu_device_id = (unsigned int) gpu_id;
+			    cv::gpu::setDevice(gpu_device_id);
+			}
                 }
 
 
