@@ -1,0 +1,73 @@
+<launch>
+
+  <!-- setting of this launch file -->
+  <arg name="car_detection" default="true" />
+  <arg name="pedestrian_detection" default="true" />
+
+  <arg name="detect_is_use_gpu" default="true" />
+  <arg name="detect_gpu_device_id" default="0" />
+
+  <arg name="is_register_lidar2camera_tf" default="true" />
+  <arg name="is_publish_projection_matrix" default="true" />
+  <arg name="is_publish_camera_info" default="true" />
+  <arg name="camera_calib" default="/home/shihclin/.autoware/data/calibration/camera_lidar_3d/prius/nic-150407.yml"/>
+
+  <!-- calibration_publisher -->
+  <include file="$(find runtime_manager)/scripts/calibration_publisher.launch">
+    <arg name="file" value="$(arg camera_calib)" />
+    <arg name="register_lidar2camera_tf" value="$(arg is_register_lidar2camera_tf)" />
+    <arg name="publish_extrinsic_mat" value="$(arg is_publish_projection_matrix)" />
+    <arg name="publish_camera_info" value="$(arg is_publish_camera_info)" />
+  </include>
+
+  <!-- points2image -->
+  <node pkg="points2image" type="points2image" name="points2image" />
+
+  <!-- car and pedestrian detection -->
+  <!-- dpm_XXX -->
+  
+  <!-- Fast R-CNN-->
+
+  <include file="$(find cv_tracker)/launch/rcnn.launch">
+    <arg name="car" value="$(arg car_detection)" />
+    <arg name="pedestrian" value="$(arg pedestrian_detection)" />
+    <arg name="use_gpu" value="$(arg detect_is_use_gpu)" />
+    <arg name="gpu_device_id" value="$(arg detect_gpu_device_id)" />
+  </include>
+
+  <!-- range_fusion -->
+  <include file="$(find cv_tracker)/launch/ranging.launch">
+    <arg name="car" value="$(arg car_detection)" />
+    <arg name="pedestrian" value="$(arg pedestrian_detection)" />
+  </include>
+
+
+  <!-- obj_reproj -->
+  <include file="$(find cv_tracker)/launch/reprojection.launch">
+    <arg name="car" value="$(arg car_detection)" />
+    <arg name="pedestrian" value="$(arg pedestrian_detection)" />
+  </include>
+
+  <!-- euclidean_cluster -->
+  <include file="$(find lidar_tracker)/launch/euclidean_clustering.launch">
+  </include>
+
+  <!-- obj_fusion -->
+  <include file="$(find lidar_tracker)/launch/obj_fusion.launch">
+    <arg name="car" value="$(arg car_detection)" />
+    <arg name="pedestrian" value="$(arg pedestrian_detection)" />
+  </include>
+
+
+  <!-- traffic light recognition -->
+  <!-- feat_proj -->
+  <!--
+  <node pkg="road_wizard" type="feat_proj" name="feat_proj" />
+  -->
+
+  <!-- region_tlr -->
+  <!--
+  <include file="$(find road_wizard)/launch/traffic_light_recognition.launch" />
+  -->
+
+</launch>

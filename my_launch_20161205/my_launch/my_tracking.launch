@@ -1,0 +1,21 @@
+<launch>
+
+  <!-- setting of this launch file -->
+  <arg name="car_detection" default="true" />
+  <arg name="pedestrian_detection" default="false" />
+  <arg name="track_is_use_gpu" default="true" />
+  <arg name="track_gpu_device_id" default="5" />
+
+
+
+  <!-- car and pedestrian detection -->
+  <!-- XXX_track -->
+
+  <include file="$(find cv_tracker)/launch/klt_tracking.launch">
+    <arg name="car" value="$(arg car_detection)" />
+    <arg name="pedestrian" value="$(arg pedestrian_detection)" />
+    <arg name="use_gpu" value="$(arg track_is_use_gpu)" />
+    <arg name="gpu_device_id" value="$(arg track_gpu_device_id)" />
+  </include>
+
+</launch>
