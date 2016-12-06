@@ -63,7 +63,7 @@
 /*=====*/
 #include <chrono>
 
-#define SCHEDULER
+//#define SCHEDULER
 
 static std::ofstream ofs_times;
 static std::ofstream ofs_times_obj;
@@ -243,26 +243,15 @@ public:
 		bool scheduler	= false;
 
 #ifdef SCHEDULER
-		// # of objects
 		total_cnt++;		
 		if(obj_num == 0){
 		    scheduler	= false;
 		    cpu_cnt++;
 		}
 		else{
-		    //scheduler	= true;    //TBD!!!!!!!!!!!!!!!!!!!!!!
+		    scheduler	= true;
 		    gpu_cnt++;
 		}
-
-		int Scheduler_Area = 0;
-		// # of pixel for total objects
-		for(unsigned int j = 0; j < obj_detections_.size();j++) {
-			cv::LatentSvmDetector::ObjectDetection tmp_detection = obj_detections_[j];
-			int tmp_area	= tmp_detection.rect.width * tmp_detection.rect.height;
-			Scheduler_Area += tmp_detection.rect.width * tmp_detection.rect.height;
-			std::cout<<" Current Object["<<j<<"] Area: "<<tmp_area<<std::endl;
-		}
-		std::cout<<"Detected Object: "<<obj_num<<" Total Area: "<<Scheduler_Area<<std::endl;
 		std::cout<<"scheduler: " << scheduler << " Total Count: "<< total_cnt << " CPU percentage: "<<float(cpu_cnt)/float(total_cnt) << " GPU percentage: "<<float(gpu_cnt)/float(total_cnt)<<std::endl;
 #endif
 

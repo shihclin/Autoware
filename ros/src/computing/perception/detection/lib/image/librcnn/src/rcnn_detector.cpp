@@ -286,7 +286,7 @@ std::vector< RectClassScore<float> >
 	const float* class_probability_data = class_probability_layer->cpu_data();
 	const float* bounding_box_predicted_data = bounding_box_predicted_layer->cpu_data();
 
-	std::cout<<"BB Shape: "<<bounding_box_predicted_layer->shape(0)<< " " << bounding_box_predicted_layer->shape(1)<<", BB layer count: "<<bounding_box_predicted_layer->count()<<std::endl;
+	//std::cout<<"BB Shape: "<<bounding_box_predicted_layer->shape(0)<< " " << bounding_box_predicted_layer->shape(1)<<", BB layer count: "<<bounding_box_predicted_layer->count()<<std::endl;
 	
 	
 

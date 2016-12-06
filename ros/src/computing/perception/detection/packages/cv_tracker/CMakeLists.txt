@@ -262,7 +262,6 @@ endif()
 ###########################################CAFFE NEEDS TO BE PREVIOUSLY COMPILED####################
 ##############DONT FORGET TO INSTALL fastrcnn's caffe dynamic libraries to /usr/local/lib	 	#### 
 set(FASTERCAFFE_PATH "/home/shihclin/Workloads/py-faster-rcnn/caffe-fast-rcnn/distribute")
-#set(FASTERCAFFE_PATH "/home/shihclin/Workloads/mscnn/distribute")
 ####################################################################################################
 
 if(EXISTS "${FASTERCAFFE_PATH}")
