@@ -41,9 +41,9 @@ elif [ $(which konsole) ]; then
 fi
 
 echo "Process Manager"
-source ./devel/setup.bash;
-source ./devel/setup.sh
-source ~/.ros/Cleanup
+source ./devel/setup.bash
+#source ./devel/setup.sh
+source ~/.ros/Cleanup.sh
 #gksudo --message "Please input password for launching process manager" \
 #       -- $MY_PATH/run_proc_manager &
 
@@ -80,13 +80,13 @@ ${TERMINAL} ${OPTION_LOC_GEOMETRY} ${OPTION_TITLE}="loc" --${OPTION_WORKING_DIR}
 ${TERMINAL} ${OPTION_DET_GEOMETRY} ${OPTION_TITLE}="det" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_detection.launch'"&
 
 #boot tracking launch
-${TERMINAL} ${OPTION_TRA_GEOMETRY} ${OPTION_TITLE}="det" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_tracking.launch'"&
+#${TERMINAL} ${OPTION_TRA_GEOMETRY} ${OPTION_TITLE}="det" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_tracking.launch'"&
 
 #boot mission planning launch
-${TERMINAL} ${OPTION_MIPL_GEOMETRY} ${OPTION_TITLE}="mipl" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_mission_planning.launch'"&
+#${TERMINAL} ${OPTION_MIPL_GEOMETRY} ${OPTION_TITLE}="mipl" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_mission_planning.launch'"&
 
 #boot motion planning launch
-${TERMINAL} ${OPTION_MOPL_GEOMETRY} ${OPTION_TITLE}="mopl" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_motion_planning.launch'"&
+#${TERMINAL} ${OPTION_MOPL_GEOMETRY} ${OPTION_TITLE}="mopl" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_motion_planning.launch'"&
 
 #boot raw image terminal
 #${TERMINAL} ${OPTION_IMG_GEOMETRY} ${OPTION_TITLE}="img" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; rosrun image_view image_view image:=/image_raw '" &

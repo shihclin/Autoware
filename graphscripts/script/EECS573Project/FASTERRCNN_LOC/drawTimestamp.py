@@ -66,11 +66,11 @@ def parse_csv(filename):
   return raw_data, legend_labels
 
 # FIXME: Change the file name to plot
-filename = "ndt_matching_timeseries.csv"
+filename = "FasterRcnn_detect_timeseries.csv"
 csv_filename = filename
 graph_filename = filename
 
-#csv_filename = "../../../csv/Loc_MT/WithopenMP_AllRun/" + filename
+#csv_filename = "../../../csv/FASTERRCNN_LOC/" + filename
 #graph_filename = "../../../graph/EECS573/" + filename
 data    = parse_csv(csv_filename)
 out_filename = graph_filename[:-3] + "png"
@@ -101,8 +101,8 @@ for i in range(NUM_LINES):
 # x-axis and y-axis labels
 ax.set_xlabel("Time (s)")
 ax.set_ylabel("Latency (ms)")
-#ax.set_xlim([0, 600])
-ax.set_ylim([0, 900])
+ax.set_xlim([80, 500])
+ax.set_ylim([0, 500])
 
 
 #ax.set_yticks(np.arange(0, 400, 50))

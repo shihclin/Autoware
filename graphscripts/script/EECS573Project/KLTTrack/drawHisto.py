@@ -16,16 +16,16 @@ def parse_csv(filename):
     return raw_data
 
 
-filename = "ndt_matching_histogram.csv"
+filename = "klt_track_histogram.csv"
 csv_filename = filename
 graph_filename = filename
-#csv_filename = "../../../csv/Loc_MT/WithopenMP_AllRun/" + filename
+#csv_filename = "../../../csv/KLT_tracking_test_1/" + filename
 #graph_filename = "../../../graph/EECS573/" + filename
 data    = parse_csv(csv_filename)
 out_filename = graph_filename[:-3] + "png"
 
 
-n, bins, patches = plt.hist(data, 100, alpha=0.5, color='blue', label='NDT Localization')
+n, bins, patches = plt.hist(data, 100, alpha=0.5, color='blue', label='KLT Tracking')
 plt.xlabel('Latency (ms)')
 plt.ylabel('Number')
 plt.grid()

@@ -66,11 +66,11 @@ def parse_csv(filename):
   return raw_data, legend_labels
 
 # FIXME: Change the file name to plot
-filename = "ndt_matching_timeseries.csv"
+filename = "test.csv"
 csv_filename = filename
 graph_filename = filename
 
-#csv_filename = "../../../csv/Loc_MT/WithopenMP_AllRun/" + filename
+#csv_filename = "../../../csv/RCNN_LOC/" + filename
 #graph_filename = "../../../graph/EECS573/" + filename
 data    = parse_csv(csv_filename)
 out_filename = graph_filename[:-3] + "png"
@@ -83,7 +83,7 @@ if filename == "line_graph.csv":
 
 data, legend_labels = parse_csv(csv_filename)
 
-ax = plt.subplot(1, 1, 1)
+ax = plt.subplots()
 
 NUM_LINES = len(legend_labels)
 
@@ -91,10 +91,18 @@ NUM_LINES = len(legend_labels)
 color_list = color_maker(NUM_LINES, map="brg")
 #color_list = color_maker(5, map="jet")
 
+y = np.row_stack((np.array(data[legend_labels[0]]["y"])))
+x = np.array(data[legend_labels[0]]["x"])
+#y = np.row_stack((data[legend_labels[0]]["y"],data[legend_labels[1]]["y"],data[legend_labels[2]]["y"]))
+print data[legend_labels[0]]["x"]
 
-for i in range(NUM_LINES):
-    ax.plot(data[legend_labels[i]]["x"], data[legend_labels[i]]["y"], "-",
-        color=color_list[i], label=legend_labels[i], lw=1)
+
+ax.stackplot(x,y)
+#ax.stackplot(data[legend_labels[0]]["x"],data[legend_labels[0]]["y"],data[legend_labels[1]]["y"],data[legend_labels[2]]["y"],colors=['m','c','r'])
+
+#for i in range(NUM_LINES):
+#    ax.plot(data[legend_labels[i]]["x"], data[legend_labels[i]]["y"], "-",
+#        color=color_list[i], label=legend_labels[i], lw=1)
 
 
 #ax.axhline(y=490, color='red', linestyle='--', lw=1)
@@ -102,7 +110,7 @@ for i in range(NUM_LINES):
 ax.set_xlabel("Time (s)")
 ax.set_ylabel("Latency (ms)")
 #ax.set_xlim([0, 600])
-ax.set_ylim([0, 900])
+ax.set_ylim([0, 500])
 
 
 #ax.set_yticks(np.arange(0, 400, 50))
