@@ -253,8 +253,18 @@ public:
 		    cpu_cnt++;
 		}
 		else{
+/*<<<<<<< HEAD
 		    // # of pixel for total objects
 		    for(unsigned int j = 0; j < obj_detections_.size();j++) {
+=======
+		    scheduler	= true;    //TBD!!!!!!!!!!!!!!!!!!!!!!
+		    gpu_cnt++;
+		}
+
+		int Scheduler_Area = 0;
+*/		// # of pixel for total objects
+		for(unsigned int j = 0; j < obj_detections_.size();j++) {
+//>>>>>>> dcf2257663c79aa0fe17b13bf6fa259e4482be03
 			cv::LatentSvmDetector::ObjectDetection tmp_detection = obj_detections_[j];
 			//int tmp_area	= tmp_detection.rect.width * tmp_detection.rect.height;
 			Scheduler_Area += tmp_detection.rect.width * tmp_detection.rect.height;
@@ -544,9 +554,9 @@ public:
                 if (private_node_handle.getParam("gpu_device_id", gpu_id ))
                 {
 			if(use_gpu_){
-			    ROS_INFO("KLT GPU Device ID: %d", gpu_id);
 			    gpu_device_id = (unsigned int) gpu_id;
 			    cv::gpu::setDevice(gpu_device_id);
+			    ROS_INFO("KLT GPU Device ID: %d", gpu_id);
 			}
                 }
 
