@@ -80,7 +80,7 @@ ${TERMINAL} ${OPTION_LOC_GEOMETRY} ${OPTION_TITLE}="loc" --${OPTION_WORKING_DIR}
 ${TERMINAL} ${OPTION_DET_GEOMETRY} ${OPTION_TITLE}="det" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_detection.launch'"&
 
 #boot tracking launch
-#${TERMINAL} ${OPTION_TRA_GEOMETRY} ${OPTION_TITLE}="det" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_tracking.launch'"&
+${TERMINAL} ${OPTION_TRA_GEOMETRY} ${OPTION_TITLE}="det" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_tracking.launch'"&
 
 #boot mission planning launch
 #${TERMINAL} ${OPTION_MIPL_GEOMETRY} ${OPTION_TITLE}="mipl" --${OPTION_WORKING_DIR}=${MY_PATH} ${OPTION_COMMAND}="bash -c 'source ./devel/setup.bash; roslaunch ~/.autoware/my_launch/my_mission_planning.launch'"&

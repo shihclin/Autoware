@@ -6,7 +6,8 @@
 LkTracker::LkTracker(int in_id, float in_min_height, float in_max_height, float in_range)
 {
   max_point_count_ 		= 500;
-  criteria_max_iteration_	= 20;
+  criteria_max_iteration_	= 30;
+  //criteria_max_iteration_	= 20;
   criteria_epsilon_		= 0.03;
   corner_window_size_		= 31;
   corner_subwindow_size_	= 10;

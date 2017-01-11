@@ -250,7 +250,7 @@ public:
 		    cpu_cnt++;
 		}
 		else{
-		    //scheduler	= true;    //TBD!!!!!!!!!!!!!!!!!!!!!!
+		    scheduler	= true;    //TBD!!!!!!!!!!!!!!!!!!!!!!
 		    gpu_cnt++;
 		}
 
@@ -536,9 +536,9 @@ public:
                 if (private_node_handle.getParam("gpu_device_id", gpu_id ))
                 {
 			if(use_gpu_){
-			    ROS_INFO("KLT GPU Device ID: %d", gpu_id);
 			    gpu_device_id = (unsigned int) gpu_id;
 			    cv::gpu::setDevice(gpu_device_id);
+			    ROS_INFO("KLT GPU Device ID: %d", gpu_id);
 			}
                 }
 
