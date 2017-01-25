@@ -467,7 +467,8 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     {
       use_predict_pose = 1;
     }
-    use_predict_pose = 0;
+    //use_predict_pose = 0;
+    //use_predict_pose = 0;
 
     if (use_predict_pose == 0)
     {
@@ -653,9 +654,9 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     	ofs_histo << ", " << exe_time;
     //std::cout << "Number of Iterations: " << ndt.getFinalNumIteration() << std::endl;
     //std::cout << "NDT Reliability: " << ndt_reliability.data << std::endl;
-    //std::cout << "(x,y,z,roll,pitch,yaw): " << std::endl;
-    //std::cout << "(" << current_pose.x << ", " << current_pose.y << ", " << current_pose.z << ", " << current_pose.roll
-    //          << ", " << current_pose.pitch << ", " << current_pose.yaw << ")" << std::endl;
+    std::cout << "(x,y,z,roll,pitch,yaw): " << std::endl;
+    std::cout << "(" << current_pose.x << ", " << current_pose.y << ", " << current_pose.z << ", " << current_pose.roll
+              << ", " << current_pose.pitch << ", " << current_pose.yaw << ")" << std::endl;
     //std::cout << "Transformation Matrix: " << std::endl;
     //std::cout << t << std::endl;
     //std::cout << "-----------------------------------------------------------------" << std::endl;
@@ -804,7 +805,8 @@ int main(int argc, char** argv)
   // Publishers
   predict_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/predict_pose", 1000);
   ndt_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/ndt_pose", 1000);
-  // current_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/current_pose", 1000);
+  current_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/current_pose", 1000);
+  //current_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/current_pose", 1000);
   localizer_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/localizer_pose", 1000);
   estimate_twist_pub = nh.advertise<geometry_msgs::TwistStamped>("/estimate_twist", 1000);
   estimated_vel_mps_pub = nh.advertise<std_msgs::Float32>("/estimated_vel_mps", 1000);

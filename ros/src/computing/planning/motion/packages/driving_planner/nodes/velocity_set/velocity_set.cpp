@@ -881,7 +881,8 @@ int main(int argc, char **argv)
   ros::Subscriber control_pose_sub = nh.subscribe("current_pose", 1, controlCallback);
   ros::Subscriber vscan_sub = nh.subscribe("vscan_points", 1, vscanCallback);
   ros::Subscriber base_waypoint_sub = nh.subscribe("base_waypoints", 1, baseWaypointCallback);
-  ros::Subscriber obj_pose_sub = nh.subscribe("obj_pose", 1, objPoseCallback);
+  ros::Subscriber obj_pose_sub = nh.subscribe("/obj_car/obj_pose", 1, objPoseCallback);
+  //ros::Subscriber obj_pose_sub = nh.subscribe("obj_pose", 1, objPoseCallback);
   ros::Subscriber current_vel_sub = nh.subscribe("current_velocity", 1, currentVelCallback);
   ros::Subscriber config_sub = nh.subscribe("config/velocity_set", 10, configCallback);
 

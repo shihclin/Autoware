@@ -81,7 +81,7 @@ static void fusion_objects(void)
     copy(centroids.begin(), centroids.end(), back_inserter(centroids_current));
     UNLOCK(mtx_centroids);
     
-	std::cout<< centroids_current.size() << " "<<obj_label_current.reprojected_positions.size() <<  " "<<obj_label_current.obj_id.size() <<std::endl;
+	std::cout<< centroids_current.empty() << obj_label_current.reprojected_positions.empty() <<  obj_label_current.obj_id.empty() <<std::endl;
     if (centroids_current.empty() || obj_label_current.reprojected_positions.empty() ||  obj_label_current.obj_id.empty()) {
         visualization_msgs::MarkerArray pub_msg;
         std_msgs::Time time;
@@ -277,13 +277,12 @@ void cluster_centroids_cb(const lidar_tracker::centroids& cluster_centroids_msg)
     LOCK(mtx_centroids);
     static tf::TransformListener trf_listener;
     try {
-        //trf_listener.lookupTransform("map", "velodyne", ros::Time(0), transform); //XXX
+        trf_listener.lookupTransform("map", "velodyne", ros::Time(0), transform);
 
         for (const auto& point : cluster_centroids_msg.points) {
             /* convert centroids coodinate from velodyne frame to map frame */
             tf::Vector3 pt(point.x, point.y, point.z);
-            tf::Vector3 converted = pt; 
-            //tf::Vector3 converted = transform * pt; 
+            tf::Vector3 converted = transform * pt;
 
             geometry_msgs::Point point_in_map;
             point_in_map.x = converted.x();
